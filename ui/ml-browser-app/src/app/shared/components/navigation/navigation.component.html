@@ -1,0 +1,66 @@
+<div class="navigation-container">
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav
+      #drawer
+      class="sidenav"
+      fixedInViewport
+      [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+      [mode]="(isHandset$ | async) ? 'over' : 'side'"
+      [opened]="(isHandset$ | async) === false"
+    >
+      <mat-toolbar>{{ appTitle }}</mat-toolbar>
+      <mat-nav-list>
+        <a
+          mat-list-item
+          *ngFor="let item of menuItems"
+          [routerLink]="[item.path]"
+          routerLinkActive="active"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      </mat-nav-list>
+    </mat-sidenav>
+    <mat-sidenav-content>
+      <mat-toolbar color="primary">
+        <button
+          type="button"
+          aria-label="Toggle sidenav"
+          mat-icon-button
+          (click)="drawer.toggle()"
+          *ngIf="isHandset$ | async"
+        >
+          <mat-icon>menu</mat-icon>
+        </button>
+        <span>{{ appTitle }}</span>
+        <span class="toolbar-spacer"></span>
+        
+        <!-- User menu -->
+        @if (authService.isAuthenticated$ | async) {
+          <div class="user-badge">
+            <mat-icon class="connector-icon">business</mat-icon>
+            <span class="connector-name">{{ (authService.currentUser$ | async)?.connectorId || 'Unknown' }}</span>
+          </div>
+          <button mat-icon-button [matMenuTriggerFor]="userMenu">
+            <mat-icon>account_circle</mat-icon>
+          </button>
+          <mat-menu #userMenu="matMenu">
+            <div class="user-info" mat-menu-item disabled>
+              <div class="user-name">{{ (authService.currentUser$ | async)?.displayName || 'User' }}</div>
+              <div class="user-email">{{ (authService.currentUser$ | async)?.username || '' }}</div>
+              <div class="user-connector">Connector: {{ (authService.currentUser$ | async)?.connectorId || '' }}</div>
+            </div>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="logout()">
+              <mat-icon>logout</mat-icon>
+              <span>Logout</span>
+            </button>
+          </mat-menu>
+        }
+      </mat-toolbar>
+      <div class="scrollable-content">
+        <router-outlet></router-outlet>
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

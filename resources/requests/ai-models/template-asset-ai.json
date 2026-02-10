@@ -1,0 +1,26 @@
+{
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+    "hf": "https://pionera.ai/edc/hf#"
+  },
+  "@id": "model-your-id",
+  "properties": {
+    "name": "Model Display Name",
+    "contenttype": "application/octet-stream",
+    "hf:pipeline_tag": "text-classification",
+    "hf:license": "Apache-2.0",
+    "hf:tags": ["demo"],
+    "hf:library_name": "pytorch",
+    "hf:datasets": ["dataset-name"],
+    "hf:language": ["en"],
+    "hf:base_model": "org/base-model",
+    "hf:metrics": {
+      "accuracy": 0.9
+    }
+  },
+  "dataAddress": {
+    "type": "HttpData",
+    "baseUrl": "https://example.com/model.bin",
+    "proxyPath": "true"
+  }
+}

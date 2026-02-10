@@ -1,0 +1,22 @@
+<div class="ml-search-bar">
+  <div class="search-container">
+    <mat-icon class="search-icon">search</mat-icon>
+    <input
+      matInput
+      [formControl]="searchControl"
+      placeholder="Search IA assets by name, description, keywords..."
+      class="search-input"
+      type="text"
+    />
+    @if (searchControl.value) {
+      <button
+        mat-icon-button
+        (click)="clearSearch()"
+        class="clear-btn"
+        matTooltip="Clear search"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </div>
+</div>

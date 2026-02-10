@@ -1,0 +1,26 @@
+{
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+    "hf": "https://pionera.ai/edc/hf#"
+  },
+  "@id": "model-text-embedding-v3",
+  "properties": {
+    "name": "Text Embedding Model v3",
+    "contenttype": "application/octet-stream",
+    "hf:pipeline_tag": "feature-extraction",
+    "hf:license": "CC-BY-4.0",
+    "hf:tags": ["embedding", "nlp", "retrieval"],
+    "hf:library_name": "pytorch",
+    "hf:datasets": ["mteb"],
+    "hf:language": ["en"],
+    "hf:base_model": "pionera/base-embedding",
+    "hf:metrics": {
+      "mteb_avg": 0.62
+    }
+  },
+  "dataAddress": {
+    "type": "HttpData",
+    "baseUrl": "https://jsonplaceholder.typicode.com/users",
+    "proxyPath": "true"
+  }
+}

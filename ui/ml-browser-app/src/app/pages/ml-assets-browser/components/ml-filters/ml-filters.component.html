@@ -1,0 +1,161 @@
+<div class="ml-filters">
+  <div class="filters-header">
+    <h3>Filters</h3>
+    <button mat-button *ngIf="hasActiveFilters" (click)="clearFilters()" class="clear-all-btn">
+      Clear All
+    </button>
+  </div>
+
+  <!-- Asset Source Filter -->
+  <mat-expansion-panel *ngIf="availableAssetSources.length > 0" [expanded]="expandedSections.source">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Asset Source <span class="count">({{ availableAssetSources.length }})</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="filter-content">
+      <mat-checkbox *ngFor="let source of availableAssetSources"
+                    [checked]="isAssetSourceSelected(source)"
+                    (change)="toggleAssetSource(source)"
+                    class="filter-checkbox">
+        {{ source }}
+      </mat-checkbox>
+    </div>
+  </mat-expansion-panel>
+
+  <!-- Tasks Filter -->
+  <mat-expansion-panel *ngIf="availableTasks.length > 0" [expanded]="expandedSections.tasks">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Tasks <span class="count">({{ availableTasks.length }})</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="filter-content">
+      <mat-checkbox *ngFor="let task of availableTasks"
+                    [checked]="isTaskSelected(task)"
+                    (change)="toggleTask(task)"
+                    class="filter-checkbox">
+        {{ task }}
+      </mat-checkbox>
+    </div>
+  </mat-expansion-panel>
+
+  <!-- Subtasks Filter -->
+  <mat-expansion-panel *ngIf="availableSubtasks.length > 0" [expanded]="expandedSections.subtasks">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Subtasks <span class="count">({{ availableSubtasks.length }})</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="filter-content">
+      <mat-checkbox *ngFor="let subtask of availableSubtasks"
+                    [checked]="isSubtaskSelected(subtask)"
+                    (change)="toggleSubtask(subtask)"
+                    class="filter-checkbox">
+        {{ subtask }}
+      </mat-checkbox>
+    </div>
+  </mat-expansion-panel>
+
+  <!-- Algorithms Filter -->
+  <mat-expansion-panel *ngIf="availableAlgorithms.length > 0" [expanded]="expandedSections.algorithms">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Algorithms <span class="count">({{ availableAlgorithms.length }})</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="filter-content">
+      <mat-checkbox *ngFor="let algorithm of availableAlgorithms"
+                    [checked]="isAlgorithmSelected(algorithm)"
+                    (change)="toggleAlgorithm(algorithm)"
+                    class="filter-checkbox">
+        {{ algorithm }}
+      </mat-checkbox>
+    </div>
+  </mat-expansion-panel>
+
+  <!-- Libraries Filter -->
+  <mat-expansion-panel *ngIf="availableLibraries.length > 0" [expanded]="expandedSections.libraries">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Libraries <span class="count">({{ availableLibraries.length }})</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="filter-content">
+      <mat-checkbox *ngFor="let library of availableLibraries"
+                    [checked]="isLibrarySelected(library)"
+                    (change)="toggleLibrary(library)"
+                    class="filter-checkbox">
+        {{ library }}
+      </mat-checkbox>
+    </div>
+  </mat-expansion-panel>
+
+  <!-- Frameworks Filter -->
+  <mat-expansion-panel *ngIf="availableFrameworks.length > 0" [expanded]="expandedSections.frameworks">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Frameworks <span class="count">({{ availableFrameworks.length }})</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="filter-content">
+      <mat-checkbox *ngFor="let framework of availableFrameworks"
+                    [checked]="isFrameworkSelected(framework)"
+                    (change)="toggleFramework(framework)"
+                    class="filter-checkbox">
+        {{ framework }}
+      </mat-checkbox>
+    </div>
+  </mat-expansion-panel>
+
+  <!-- Storage Type Filter -->
+  <mat-expansion-panel *ngIf="availableStorageTypes.length > 0" [expanded]="expandedSections.storage">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Storage Type <span class="count">({{ availableStorageTypes.length }})</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="filter-content">
+      <mat-checkbox *ngFor="let st of availableStorageTypes"
+                    [checked]="isStorageTypeSelected(st)"
+                    (change)="toggleStorageType(st)"
+                    class="filter-checkbox">
+        {{ st }}
+      </mat-checkbox>
+    </div>
+  </mat-expansion-panel>
+
+  <!-- Software Filter -->
+  <mat-expansion-panel *ngIf="availableSoftware.length > 0" [expanded]="expandedSections.software">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Software <span class="count">({{ availableSoftware.length }})</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="filter-content">
+      <mat-checkbox *ngFor="let sw of availableSoftware"
+                    [checked]="isSoftwareSelected(sw)"
+                    (change)="toggleSoftware(sw)"
+                    class="filter-checkbox">
+        {{ sw }}
+      </mat-checkbox>
+    </div>
+  </mat-expansion-panel>
+
+  <!-- Format Filter -->
+  <mat-expansion-panel *ngIf="availableFormats.length > 0" [expanded]="expandedSections.format">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Format <span class="count">({{ availableFormats.length }})</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="filter-content">
+      <mat-checkbox *ngFor="let format of availableFormats"
+                    [checked]="isFormatSelected(format)"
+                    (change)="toggleFormat(format)"
+                    class="filter-checkbox">
+        {{ format }}
+      </mat-checkbox>
+    </div>
+  </mat-expansion-panel>
+</div>

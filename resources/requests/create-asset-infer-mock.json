@@ -1,0 +1,24 @@
+{
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+    "hf": "https://pionera.ai/edc/hf#"
+  },
+  "@id": "model-mock-infer-v1",
+  "properties": {
+    "name": "Mock Inference Model v1",
+    "contenttype": "application/json",
+    "hf:pipeline_tag": "text-classification",
+    "hf:license": "Apache-2.0",
+    "hf:tags": ["mock", "inference", "demo"],
+    "hf:library_name": "custom",
+    "hf:datasets": ["mock"],
+    "hf:language": ["en"],
+    "hf:base_model": "mock-base",
+    "hf:inference_path": "/infer"
+  },
+  "dataAddress": {
+    "type": "HttpData",
+    "baseUrl": "http://localhost:9000",
+    "proxyPath": "true"
+  }
+}

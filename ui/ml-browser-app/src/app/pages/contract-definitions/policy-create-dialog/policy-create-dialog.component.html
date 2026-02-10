@@ -1,0 +1,135 @@
+<div class="policy-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon>policy</mat-icon>
+    Create New Policy
+  </h2>
+
+  <mat-dialog-content>
+    <!-- Policy ID -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Policy ID</mat-label>
+      <input [(ngModel)]="policyId" matInput required placeholder="my-custom-policy">
+      <mat-icon matPrefix>fingerprint</mat-icon>
+      <mat-hint>Unique identifier for this policy</mat-hint>
+    </mat-form-field>
+
+    <!-- Action -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Action</mat-label>
+      <mat-select [(ngModel)]="action" required>
+        <mat-option *ngFor="let act of supportedActions" [value]="act">
+          {{ act }}
+        </mat-option>
+      </mat-select>
+      <mat-icon matPrefix>play_arrow</mat-icon>
+      <mat-hint>Action permitted by this policy</mat-hint>
+    </mat-form-field>
+
+    <!-- Constraints Section -->
+    <div class="constraints-section">
+      <h3>Constraints (Optional)</h3>
+      <p class="section-description">Add constraints to restrict policy applicability</p>
+
+      <!-- Existing Constraints -->
+      <div *ngIf="constraints.length > 0" class="constraints-list">
+        <mat-chip-listbox>
+          <mat-chip *ngFor="let constraint of constraints; let i = index" 
+                    [removable]="true" 
+                    (removed)="removeConstraint(i)"
+                    class="constraint-chip">
+            <span class="constraint-text">
+              {{ getLeftOperandLabel(constraint.leftOperand) }}
+              {{ getOperatorLabel(constraint.operator) }}
+              <strong>{{ constraint.rightOperand }}</strong>
+            </span>
+            <mat-icon matChipRemove>cancel</mat-icon>
+          </mat-chip>
+        </mat-chip-listbox>
+      </div>
+
+      <!-- Add New Constraint -->
+      <div class="constraint-form">
+        <mat-form-field appearance="outline" class="constraint-field">
+          <mat-label>Left Operand</mat-label>
+          <mat-select [(ngModel)]="currentConstraint.leftOperand" (ngModelChange)="onLeftOperandChange()">
+            <mat-option *ngFor="let op of supportedLeftOperands" [value]="op.value">
+              {{ op.label }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>What to check</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="constraint-field">
+          <mat-label>Operator</mat-label>
+          <mat-select [(ngModel)]="currentConstraint.operator">
+            <mat-option *ngFor="let op of supportedOperators" [value]="op.value">
+              {{ op.label }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Comparison type</mat-hint>
+        </mat-form-field>
+
+        <!-- Date picker for POLICY_EVALUATION_TIME -->
+        <mat-form-field *ngIf="isDateField()" appearance="outline" class="constraint-field">
+          <mat-label>Date & Time</mat-label>
+          <input [(ngModel)]="currentDate"
+                 (ngModelChange)="onDateChange($event)"
+                 matInput
+                 [matDatepicker]="picker"
+                 placeholder="Select date">
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-hint>Policy evaluation date</mat-hint>
+        </mat-form-field>
+
+        <!-- Text input for other operands -->
+        <mat-form-field *ngIf="!isDateField()" appearance="outline" class="constraint-field">
+          <mat-label>Right Operand</mat-label>
+          <input [(ngModel)]="currentConstraint.rightOperand" 
+                 matInput 
+                 placeholder="Value to compare against">
+          <mat-hint>Expected value</mat-hint>
+        </mat-form-field>
+
+        <button mat-icon-button 
+                color="accent" 
+                (click)="addConstraint()"
+                [disabled]="!currentConstraint.leftOperand || !currentConstraint.rightOperand"
+                matTooltip="Add constraint">
+          <mat-icon>add_circle</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Policy Preview -->
+    <div *ngIf="policyId" class="policy-preview">
+      <h4>Policy Preview</h4>
+      <div class="preview-content">
+        <p><strong>ID:</strong> {{ policyId }}</p>
+        <p><strong>Action:</strong> {{ action }}</p>
+        <p *ngIf="constraints.length === 0"><em>No constraints (unrestricted)</em></p>
+        <div *ngIf="constraints.length > 0">
+          <p><strong>Constraints:</strong></p>
+          <ul>
+            <li *ngFor="let c of constraints">
+              {{ getLeftOperandLabel(c.leftOperand) }} 
+              {{ getOperatorLabel(c.operator) }} 
+              "{{ c.rightOperand }}"
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-stroked-button (click)="onCancel()">
+      <mat-icon>cancel</mat-icon>
+      Cancel
+    </button>
+    <button mat-raised-button color="accent" (click)="onCreate()" [disabled]="!policyId">
+      <mat-icon>add_circle_outline</mat-icon>
+      Create Policy
+    </button>
+  </mat-dialog-actions>
+</div>

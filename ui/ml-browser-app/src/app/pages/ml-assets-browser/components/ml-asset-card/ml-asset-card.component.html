@@ -1,0 +1,77 @@
+<mat-card class="ml-asset-card">
+  <mat-card-header>
+    <mat-card-title class="title-row">
+      <h3 class="asset-title" [title]="asset.name">{{ asset.name }}</h3>
+      <span class="asset-version">v{{ asset.version }}</span>
+    </mat-card-title>
+    <mat-card-subtitle class="asset-badges">
+      <span class="badge" [ngClass]="isLocalAsset() ? 'badge-local' : 'badge-external'">
+        <mat-icon class="badge-icon">{{ isLocalAsset() ? 'home' : 'public' }}</mat-icon>
+        {{ isLocalAsset() ? 'Local' : 'External' }}
+      </span>
+      <span class="badge badge-owner" *ngIf="asset.owner" [title]="'Owned by ' + asset.owner">
+        <mat-icon class="badge-icon">business</mat-icon>
+        {{ asset.owner }}
+      </span>
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- Description -->
+    <p class="asset-description" [title]="asset.shortDescription">
+      {{ getTruncatedDescription(asset.shortDescription, 100) }}
+    </p>
+
+    <!-- Metadata Tags - Keywords -->
+    <div class="metadata-tags" *ngIf="displayKeywords.length > 0">
+      <span class="tag-label">Keywords:</span>
+      <mat-chip-set class="keyword-chips">
+        <mat-chip *ngFor="let keyword of displayKeywords" [title]="keyword">
+          {{ keyword }}
+        </mat-chip>
+        <mat-chip *ngIf="hasMoreKeywords" [title]="'Plus ' + (keywordCount - 5) + ' more keywords'">
+          +{{ keywordCount - 5 }}
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+
+    <!-- Asset Info -->
+    <div class="asset-info" *ngIf="asset.contentType || asset.format">
+      <div class="info-item" *ngIf="asset.contentType">
+        <mat-icon class="info-icon">description</mat-icon>
+        <span class="info-value">{{ asset.contentType }}</span>
+      </div>
+      <div class="info-item" *ngIf="asset.format">
+        <mat-icon class="info-icon">file_present</mat-icon>
+        <span class="info-value">{{ asset.format }}</span>
+      </div>
+    </div>
+
+    <!-- Storage Information -->
+    <div class="storage-info" *ngIf="asset.storageType || asset.fileName">
+      <div class="storage-row" *ngIf="asset.storageType">
+        <span class="storage-label">Storage:</span>
+        <span class="storage-value">{{ asset.storageType }}</span>
+      </div>
+      <div class="storage-row" *ngIf="asset.fileName">
+        <span class="storage-label">File:</span>
+        <span class="storage-value">{{ asset.fileName }}</span>
+      </div>
+    </div>
+  </mat-card-content>
+
+  <mat-card-actions>
+    <button mat-button (click)="onViewDetails()" class="action-btn btn-view">
+      <mat-icon>visibility</mat-icon>
+      <span>View Details</span>
+    </button>
+    <button 
+      mat-button 
+      (click)="onContractAction()" 
+      class="action-btn"
+      [ngClass]="isLocalAsset() ? 'btn-contract' : 'btn-negotiate'">
+      <mat-icon>{{ isLocalAsset() ? 'description' : 'handshake' }}</mat-icon>
+      <span>{{ isLocalAsset() ? 'Create Contract' : 'Negotiate' }}</span>
+    </button>
+  </mat-card-actions>
+</mat-card>

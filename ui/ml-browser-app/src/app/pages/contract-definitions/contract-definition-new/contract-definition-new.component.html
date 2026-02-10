@@ -1,0 +1,112 @@
+<div class="container">
+  <mat-card class="creation-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>policy</mat-icon>
+      <mat-card-title>Create Contract Definition</mat-card-title>
+      <mat-card-subtitle>Define a contract with policies and associated assets</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <mat-form-field class="form-field" appearance="outline">
+        <mat-label>Contract Definition ID</mat-label>
+        <input [(ngModel)]="contractDefinition['@id']" matInput required placeholder="contract-def-001">
+        <mat-icon matPrefix>fingerprint</mat-icon>
+        <mat-hint>Unique identifier for this contract definition</mat-hint>
+      </mat-form-field>
+
+      <div class="policy-section">
+        <h3>Policies</h3>
+        <p class="section-description">Select access and contract policies to control asset usage</p>
+
+        <div class="policy-field-group">
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Access Policy</mat-label>
+            <mat-select [(ngModel)]="accessPolicy" required>
+              <mat-option *ngFor="let policy of policies" [value]="policy">
+                {{policy['@id']}}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-hint>Policy for controlling access to assets</mat-hint>
+          </mat-form-field>
+          
+          <button mat-mini-fab 
+                  color="accent" 
+                  (click)="createAccessPolicy()"
+                  matTooltip="Create new access policy"
+                  class="create-policy-btn">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+
+        <div class="policy-field-group">
+          <mat-form-field class="form-field" appearance="outline">
+            <mat-label>Contract Policy</mat-label>
+            <mat-select [(ngModel)]="contractPolicy" required>
+              <mat-option *ngFor="let policy of policies" [value]="policy">
+                {{policy['@id']}}
+              </mat-option>
+            </mat-select>
+            <mat-icon matPrefix>description</mat-icon>
+            <mat-hint>Policy defining contract terms and obligations</mat-hint>
+          </mat-form-field>
+          
+          <button mat-mini-fab 
+                  color="accent" 
+                  (click)="createContractPolicy()"
+                  matTooltip="Create new contract policy"
+                  class="create-policy-btn">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="assets-section">
+        <h3>Associated Assets</h3>
+        <p class="section-description">Select IA assets to include in this contract</p>
+
+        <mat-form-field class="form-field" appearance="outline" floatLabel="always">
+          <mat-label>Assets</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          
+          <mat-chip-listbox>
+            <mat-chip *ngFor="let asset of selectedAssets" [removable]="true" (removed)="removeAsset(asset)">
+              {{ asset.name || asset.id }}
+              <mat-icon matChipRemove>cancel</mat-icon>
+            </mat-chip>
+
+            <input
+              matInput
+              placeholder="Search and select assets..."
+              [formControl]="assetControl"
+              [matAutocomplete]="auto">
+          </mat-chip-listbox>
+
+          <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayAsset">
+            <mat-option *ngFor="let asset of filteredAssets" [value]="asset" (onSelectionChange)="addAsset($event, asset)">
+              <div class="asset-option">
+                <span class="asset-name">{{ asset.name || asset.id }}</span>
+                <span class="asset-id">{{ asset.id }}</span>
+              </div>
+            </mat-option>
+          </mat-autocomplete>
+
+          <mat-hint *ngIf="selectedAssets.length === 0">No assets selected. Type to search...</mat-hint>
+          <mat-hint *ngIf="selectedAssets.length > 0">{{ selectedAssets.length }} asset(s) selected</mat-hint>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-stroked-button color="warn" (click)="cancel()">
+        <mat-icon>cancel</mat-icon>
+        Cancel
+      </button>
+
+      <button mat-raised-button color="accent" (click)="onSave()">
+        <mat-icon>add_circle_outline</mat-icon>
+        Create Contract
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

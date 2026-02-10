@@ -1,0 +1,396 @@
+<div class="asset-create-container">
+  <mat-card class="creation-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>add_circle_outline</mat-icon>
+        Create Machine Learning Asset
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start" class="main-tab-group">
+        
+        <!-- Tab 1: Asset Information -->
+        <mat-tab label="Asset Information">
+          <div class="asset-creation-tab">
+            <div class="form-row">
+              <mat-form-field class="form-field" color="accent">
+                <mat-label>ID *</mat-label>
+                <input required [(ngModel)]="id" matInput placeholder="unique-asset-id">
+              </mat-form-field>
+              
+              <mat-form-field class="form-field" color="accent">
+                <mat-label>Name *</mat-label>
+                <input required [(ngModel)]="name" matInput placeholder="My ML Model">
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field" color="accent">
+                <mat-label>Content Type</mat-label>
+                <input [(ngModel)]="contenttype" matInput placeholder="application/octet-stream">
+              </mat-form-field>
+
+              <mat-form-field class="form-field" color="accent">
+                <mat-label>Version *</mat-label>
+                <input required [(ngModel)]="version" matInput placeholder="1.0">
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field-full short-description" color="accent">
+                <mat-label>Short Description *</mat-label>
+                <textarea 
+                  required 
+                  [(ngModel)]="shortDescription" 
+                  matInput 
+                  rows="3" 
+                  maxlength="200"
+                  placeholder="A short description of the asset (max 200 characters)">
+                </textarea>
+                <mat-hint align="end">{{shortDescription.length}} / 200</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field-full" color="accent">
+                <mat-label>Description *</mat-label>
+                <textarea 
+                  required 
+                  [(ngModel)]="description" 
+                  matInput 
+                  rows="5"
+                  placeholder="Detailed description of the ML model, its purpose, and usage">
+                </textarea>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field" color="accent">
+                <mat-label>Asset Type *</mat-label>
+                <mat-select [(ngModel)]="assetType" required>
+                  @for (type of assetTypes; track type[0]) {
+                    <mat-option [value]="type[0]">{{ type[1] }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field class="form-field" color="accent">
+                <mat-label>Keywords *</mat-label>
+                <input required [(ngModel)]="keywords" matInput placeholder="machine-learning,classification,pytorch">
+                <mat-hint>Comma-separated values</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field" color="accent">
+                <mat-label>Byte Size</mat-label>
+                <input [(ngModel)]="byteSize" matInput type="number" placeholder="1280000">
+              </mat-form-field>
+
+              <mat-form-field class="form-field" color="accent">
+                <mat-label>File Format</mat-label>
+                <input [(ngModel)]="format" matInput placeholder="pickle">
+              </mat-form-field>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Tab 2: ML Metadata (JS_Pionera_Ontology) -->
+        <mat-tab label="ML Metadata">
+          <div class="asset-creation-tab">
+            <div class="section-header">
+              <mat-icon>psychology</mat-icon>
+              <h3>Machine Learning Metadata (JS_Pionera_Ontology)</h3>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field-full" color="accent">
+                <mat-label>Tasks</mat-label>
+                <mat-select [(ngModel)]="mlMetadata.task">
+                  @for (task of vocabularyOptions().task; track task) {
+                    <mat-option [value]="task">{{ task }}</mat-option>
+                  }
+                </mat-select>
+                <mat-hint>Select an ML task</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field-full" color="accent">
+                <mat-label>Subtasks</mat-label>
+                <mat-select [(ngModel)]="mlMetadata.subtask">
+                  @for (subtask of vocabularyOptions().subtask; track subtask) {
+                    <mat-option [value]="subtask">{{ subtask }}</mat-option>
+                  }
+                </mat-select>
+                <mat-hint>Select a subtask</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field-full" color="accent">
+                <mat-label>Algorithms</mat-label>
+                <mat-select [(ngModel)]="mlMetadata.algorithm">
+                  @for (algorithm of vocabularyOptions().algorithm; track algorithm) {
+                    <mat-option [value]="algorithm">{{ algorithm }}</mat-option>
+                  }
+                </mat-select>
+                <mat-hint>Select an algorithm</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field" color="accent">
+                <mat-label>Libraries</mat-label>
+                <mat-select [(ngModel)]="mlMetadata.library">
+                  @for (library of vocabularyOptions().library; track library) {
+                    <mat-option [value]="library">{{ library }}</mat-option>
+                  }
+                </mat-select>
+                <mat-hint>Select a library</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field class="form-field" color="accent">
+                <mat-label>Frameworks</mat-label>
+                <mat-select [(ngModel)]="mlMetadata.framework">
+                  @for (framework of vocabularyOptions().framework; track framework) {
+                    <mat-option [value]="framework">{{ framework }}</mat-option>
+                  }
+                </mat-select>
+                <mat-hint>Select a framework</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field-full" color="accent">
+                <mat-label>Software</mat-label>
+                <mat-select [(ngModel)]="mlMetadata.software">
+                  @for (software of vocabularyOptions().software; track software) {
+                    <mat-option [value]="software">{{ software }}</mat-option>
+                  }
+                </mat-select>
+                <mat-hint>Select a software requirement</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field class="form-field-full" color="accent">
+                <mat-label>Model Format</mat-label>
+                <mat-select [(ngModel)]="mlMetadata.format">
+                  @for (format of vocabularyOptions().format; track format) {
+                    <mat-option [value]="format">{{ format }}</mat-option>
+                  }
+                </mat-select>
+                <mat-hint>Select the model file format</mat-hint>
+              </mat-form-field>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Tab 3: Storage Information -->
+        <mat-tab label="Storage Information">
+          <div class="asset-creation-tab">
+            <div class="form-row">
+              <mat-form-field class="form-field-full" color="accent">
+                <mat-label>Storage Destination *</mat-label>
+                <mat-select [(ngModel)]="storageTypeId" required>
+                  @for (storageType of storageTypes; track storageType.id) {
+                    <mat-option [value]="storageType.id">{{ storageType.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <!-- HTTP Data Configuration -->
+            @if (storageTypeId === 'HttpData') {
+              <div class="storage-config">
+                <h4>HTTP Data Configuration</h4>
+                
+                <div class="form-row">
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Name *</mat-label>
+                    <input [(ngModel)]="httpDataAddress.name" matInput required>
+                  </mat-form-field>
+
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Base URL *</mat-label>
+                    <input [(ngModel)]="httpDataAddress.baseUrl" matInput required placeholder="https://example.com">
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Path</mat-label>
+                    <input [(ngModel)]="httpDataAddress.path" matInput placeholder="/api/data">
+                  </mat-form-field>
+
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Content Type</mat-label>
+                    <input [(ngModel)]="httpDataAddress.contentType" matInput placeholder="application/json">
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Auth Key</mat-label>
+                    <input [(ngModel)]="httpDataAddress.authKey" matInput>
+                  </mat-form-field>
+
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Auth Code</mat-label>
+                    <input [(ngModel)]="httpDataAddress.authCode" matInput type="password">
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Secret Name</mat-label>
+                    <input [(ngModel)]="httpDataAddress.secretName" matInput>
+                  </mat-form-field>
+                </div>
+
+                <div class="proxy-toggles">
+                  <h5>Proxy Settings</h5>
+                  <div class="toggles-row">
+                    <mat-slide-toggle 
+                      [checked]="httpDataAddress.proxyBody === 'true'" 
+                      (change)="onToggleChange('proxyBody', $event.checked)"
+                      color="accent">
+                      Proxy Body
+                    </mat-slide-toggle>
+
+                    <mat-slide-toggle 
+                      [checked]="httpDataAddress.proxyPath === 'true'" 
+                      (change)="onToggleChange('proxyPath', $event.checked)"
+                      color="accent">
+                      Proxy Path
+                    </mat-slide-toggle>
+
+                    <mat-slide-toggle 
+                      [checked]="httpDataAddress.proxyQueryParams === 'true'" 
+                      (change)="onToggleChange('proxyQueryParams', $event.checked)"
+                      color="accent">
+                      Proxy Query Params
+                    </mat-slide-toggle>
+
+                    <mat-slide-toggle 
+                      [checked]="httpDataAddress.proxyMethod === 'true'" 
+                      (change)="onToggleChange('proxyMethod', $event.checked)"
+                      color="accent">
+                      Proxy Method
+                    </mat-slide-toggle>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Amazon S3 Configuration -->
+            @if (storageTypeId === 'AmazonS3') {
+              <div class="storage-config">
+                <h4>Amazon S3 Configuration</h4>
+                
+                <div class="form-row">
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Region *</mat-label>
+                    <input [(ngModel)]="amazonS3DataAddress.region" matInput required placeholder="us-east-1">
+                  </mat-form-field>
+
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Bucket Name *</mat-label>
+                    <input [(ngModel)]="amazonS3DataAddress.bucketName" matInput required>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Key Prefix</mat-label>
+                    <input [(ngModel)]="amazonS3DataAddress.keyPrefix" matInput>
+                  </mat-form-field>
+
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Folder Name</mat-label>
+                    <input [(ngModel)]="amazonS3DataAddress.folderName" matInput>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Access Key ID *</mat-label>
+                    <input [(ngModel)]="amazonS3DataAddress.accessKeyId" matInput required>
+                  </mat-form-field>
+
+                  <mat-form-field class="form-field" color="accent">
+                    <mat-label>Secret Access Key *</mat-label>
+                    <input [(ngModel)]="amazonS3DataAddress.secretAccessKey" matInput required type="password">
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field class="form-field-full" color="accent">
+                    <mat-label>Endpoint Override *</mat-label>
+                    <input [(ngModel)]="amazonS3DataAddress.endpointOverride" matInput required>
+                  </mat-form-field>
+                </div>
+              </div>
+            }
+
+            <!-- DataSpacePrototypeStore Configuration -->
+            @if (storageTypeId === 'DataSpacePrototypeStore') {
+              <div class="storage-section">
+                <h4>DataSpacePrototype Store Configuration</h4>
+                
+                <div class="info-message" style="background: #e3f2fd; padding: 12px; margin-bottom: 16px; border-radius: 4px; border-left: 4px solid #2196f3;">
+                  <mat-icon style="color: #1976d2; vertical-align: middle; margin-right: 8px;">info</mat-icon>
+                  <span style="color: #1976d2;">
+                    <strong>File Upload Enabled:</strong> Files will be uploaded to MinIO S3 storage and metadata will be saved to PostgreSQL.
+                  </span>
+                </div>
+                
+                <div class="form-row">
+                  <mat-form-field class="form-field-full" color="accent">
+                    <mat-label>Folder Path (Optional)</mat-label>
+                    <input [(ngModel)]="dataSpacePrototypeStoreAddress.folder" matInput placeholder="ml-models/datasets">
+                    <mat-hint>Organize your files in folders within the bucket</mat-hint>
+                  </mat-form-field>
+                </div>
+
+                <div class="file-upload">
+                  <label for="fileInput" class="file-upload-label">
+                    <mat-icon>upload_file</mat-icon>
+                    Select File *
+                  </label>
+                  <input 
+                    id="fileInput" 
+                    type="file" 
+                    (change)="onFileSelected($event)"
+                    class="file-input"
+                  >
+                  @if (dataSpacePrototypeStoreAddress.file) {
+                    <div class="file-info">
+                      <mat-icon>attach_file</mat-icon>
+                      <span>{{ dataSpacePrototypeStoreAddress.file.name }}</span>
+                      <span class="file-size">({{ (dataSpacePrototypeStoreAddress.file.size / 1024 / 1024).toFixed(2) }} MB)</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+
+    <mat-card-actions class="form-actions">
+      <button (click)="onCancel()" color="warn" mat-stroked-button [disabled]="isSubmitting()">
+        <mat-icon>cancel</mat-icon>
+        Cancel
+      </button>
+
+      <button (click)="onSave()" color="accent" mat-flat-button [disabled]="isSubmitting()">
+        <mat-icon>add_circle_outline</mat-icon>
+        {{ isSubmitting() ? 'Creating...' : 'Create Asset' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

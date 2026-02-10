@@ -1,0 +1,3 @@
+com.pionera.assetfilter.runtime.SeedVaultExtension
+com.pionera.assetfilter.filter.AssetFilterExtension
+com.pionera.assetfilter.infer.InferenceExtension

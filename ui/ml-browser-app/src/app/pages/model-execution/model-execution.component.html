@@ -1,0 +1,34 @@
+<div class="model-execution">
+  <h2>Model Execution</h2>
+
+  <div class="panel">
+    <label for="asset">Executable Asset</label>
+    <select id="asset" (change)="onSelectAsset($any($event.target).value)">
+      <option value="">Select asset</option>
+      <option *ngFor="let asset of executableAssets" [value]="asset.id">
+        {{ asset.name }} ({{ asset.id }})
+      </option>
+    </select>
+
+    <div class="hint" *ngIf="selectedAsset">
+      Endpoint path: <strong>{{ selectedAsset.execution_path }}</strong>
+    </div>
+  </div>
+
+  <div class="panel">
+    <label for="input">Input JSON</label>
+    <textarea id="input" rows="8" [(ngModel)]="inputJson"></textarea>
+    <button (click)="execute()" [disabled]="executing">
+      {{ executing ? 'Executing...' : 'Execute' }}
+    </button>
+  </div>
+
+  <div class="panel" *ngIf="errorMessage">
+    <div class="error">{{ errorMessage }}</div>
+  </div>
+
+  <div class="panel" *ngIf="outputJson">
+    <label>Output</label>
+    <pre>{{ outputJson }}</pre>
+  </div>
+</div>

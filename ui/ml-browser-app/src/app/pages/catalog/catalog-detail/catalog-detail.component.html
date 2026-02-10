@@ -1,0 +1,180 @@
+<div class="catalog-detail-container" *ngIf="data">
+  <button class="go-back" (click)="backToList()" color="accent" mat-stroked-button>
+    <mat-icon>arrow_back</mat-icon> Go back
+  </button>
+
+  <mat-tab-group [selectedIndex]="selectedTabIndex" animationDuration="0ms" mat-stretch-tabs="false" 
+                 mat-align-tabs="start" class="main-tab-group">
+    
+    <!-- Asset Information Tab -->
+    <mat-tab label="Asset information">
+      <mat-card class="dialog-card">
+        <mat-card-header>
+          <mat-card-title>General Information</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="properties-grid">
+            <mat-list-item class="property">
+              <div class="property-title" matListItemTitle>ID</div>
+              <div class="property-value" matListItemLine>{{ data.assetId }}</div>
+            </mat-list-item>
+
+            <mat-list-item class="property">
+              <div class="property-title" matListItemTitle>Name</div>
+              <div class="property-value" matListItemLine>{{ data.properties.name || 'N/A' }}</div>
+            </mat-list-item>
+
+            <mat-list-item class="property">
+              <div class="property-title" matListItemTitle>Version</div>
+              <div class="property-value" matListItemLine>{{ data.properties.version || 'N/A' }}</div>
+            </mat-list-item>
+
+            <mat-list-item class="property">
+              <div class="property-title" matListItemTitle>Content-Type</div>
+              <div class="property-value" matListItemLine 
+                   [class.value-not-available]="!data.properties.contentType">
+                {{ data.properties.contentType || 'Not available' }}
+              </div>
+            </mat-list-item>
+
+            <mat-list-item class="property full-width">
+              <div class="property-title" matListItemTitle>Short description</div>
+              <div class="property-value" matListItemLine>{{ data.properties.shortDescription || 'N/A' }}</div>
+            </mat-list-item>
+
+            <mat-list-item class="property full-width description-item">
+              <div class="property-title" matListItemTitle>Description</div>
+              <div class="property-value" matListItemLine>{{ data.properties.description || 'N/A' }}</div>
+            </mat-list-item>
+
+            <mat-list-item class="property">
+              <div class="property-title" matListItemTitle>Asset type</div>
+              <div class="property-value" matListItemLine>{{ data.properties.type || 'N/A' }}</div>
+            </mat-list-item>
+
+            <mat-list-item class="property">
+              <div class="property-title" matListItemTitle>Keywords</div>
+              <div class="property-value" matListItemLine>
+                <mat-chip-set *ngIf="isArray(data.properties.keywords) && data.properties.keywords.length > 0">
+                  <mat-chip *ngFor="let keyword of data.properties.keywords">{{ keyword }}</mat-chip>
+                </mat-chip-set>
+                <span *ngIf="!isArray(data.properties.keywords) || data.properties.keywords.length === 0">
+                  {{ data.properties.keywords || 'N/A' }}
+                </span>
+              </div>
+            </mat-list-item>
+
+            <mat-list-item class="property">
+              <div class="property-title" matListItemTitle>Byte size</div>
+              <div class="property-value" matListItemLine 
+                   [class.value-not-available]="!data.properties.byteSize">
+                {{ data.properties.byteSize || 'Not available' }}
+              </div>
+            </mat-list-item>
+
+            <mat-list-item class="property">
+              <div class="property-title" matListItemTitle>File format</div>
+              <div class="property-value" matListItemLine 
+                   [class.value-not-available]="!data.properties.format">
+                {{ data.properties.format || 'Not available' }}
+              </div>
+            </mat-list-item>
+
+            <mat-list-item class="property">
+              <div class="property-title" matListItemTitle>Owner</div>
+              <div class="property-value" matListItemLine>{{ data.properties.owner || data.originator }}</div>
+            </mat-list-item>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+
+    <!-- Contract Offers Tab -->
+    <mat-tab label="Contract Offers" *ngIf="data.catalogView !== false">
+      <div class="contract-offers-container">
+        <mat-card class="dialog-card contract-offer" *ngFor="let offer of data.contractOffers; let i = index">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>description</mat-icon>
+              Contract Offer {{ i + 1 }}
+            </mat-card-title>
+            <mat-card-subtitle>ID: {{ offer.contractId }}</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <!-- Access Policy -->
+            <div class="policy-section" *ngIf="offer.accessPolicy">
+              <h3>
+                <mat-icon>policy</mat-icon>
+                Access Policy
+              </h3>
+              <div class="policy-details">
+                <div class="policy-item">
+                  <span class="policy-label">Policy ID:</span>
+                  <span class="policy-value">{{ offer.accessPolicyId }}</span>
+                </div>
+                <div class="policy-item">
+                  <span class="policy-label">Action:</span>
+                  <mat-chip class="action-chip">{{ getPolicyAction(offer.accessPolicy) }}</mat-chip>
+                </div>
+                <div class="policy-item" *ngIf="getPolicyConstraints(offer.accessPolicy).length > 0">
+                  <span class="policy-label">Constraints:</span>
+                  <div class="constraints-list">
+                    <mat-chip *ngFor="let constraint of getPolicyConstraints(offer.accessPolicy)" 
+                              class="constraint-chip">
+                      {{ formatConstraint(constraint) }}
+                    </mat-chip>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contract Policy -->
+            <div class="policy-section" *ngIf="offer.contractPolicy">
+              <h3>
+                <mat-icon>gavel</mat-icon>
+                Contract Policy
+              </h3>
+              <div class="policy-details">
+                <div class="policy-item">
+                  <span class="policy-label">Policy ID:</span>
+                  <span class="policy-value">{{ offer.contractPolicyId }}</span>
+                </div>
+                <div class="policy-item">
+                  <span class="policy-label">Action:</span>
+                  <mat-chip class="action-chip">{{ getPolicyAction(offer.contractPolicy) }}</mat-chip>
+                </div>
+                <div class="policy-item" *ngIf="getPolicyConstraints(offer.contractPolicy).length > 0">
+                  <span class="policy-label">Constraints:</span>
+                  <div class="constraints-list">
+                    <mat-chip *ngFor="let constraint of getPolicyConstraints(offer.contractPolicy)" 
+                              class="constraint-chip">
+                      {{ formatConstraint(constraint) }}
+                    </mat-chip>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions align="end">
+            <button (click)="viewPolicyJson(offer)" color="accent" mat-stroked-button>
+              <mat-icon>code</mat-icon> View JSON-LD
+            </button>
+            <button (click)="negotiateContract(offer)" color="accent" mat-raised-button>
+              <mat-icon>handshake</mat-icon> Negotiate Contract
+            </button>
+          </mat-card-actions>
+        </mat-card>
+
+        <mat-card class="empty-state" *ngIf="!data.contractOffers || data.contractOffers.length === 0">
+          <mat-card-content>
+            <mat-icon>info</mat-icon>
+            <h3>No contract offers available</h3>
+            <p>This asset does not have any contract offers at the moment.</p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

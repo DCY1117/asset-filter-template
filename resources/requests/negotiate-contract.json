@@ -1,0 +1,15 @@
+{
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+  },
+  "@type": "ContractRequest",
+  "counterPartyAddress": "http://localhost:19194/protocol",
+  "protocol": "dataspace-protocol-http",
+  "policy": {
+    "@context": "http://www.w3.org/ns/odrl.jsonld",
+    "@id": "MQ==:bW9kZWwtbW9jay1pbmZlci12MQ==:OTY0MGIzMjktMDdjMS00NjM2LTk0OGQtMGJmZmFmZGUwYTM4",
+    "@type": "Offer",
+    "assigner": "provider",
+    "target": "assetId"
+  }
+}
