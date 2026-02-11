@@ -1,102 +1,83 @@
-# Production Readiness (What’s Missing)
+# Production Readiness (What is Missing)
 
-This project is a **local dev scaffold**. It demonstrates filtering + inference logic but is **not production‑ready**. Below is what’s missing and what must be added before real deployment.
-
----
-
-## 1) Persistence & State
-
-**Currently**
-- In‑memory stores for assets, policies, contracts, and EDRs
-
-**Production**
-- Database‑backed stores (Postgres, etc.)
-- Backed EDR store
-- Durable transfer process state
+This project is a local development scaffold. The extensions are functional, but the runtime is not production-ready. Below is a concrete checklist of what is missing and why it matters.
 
 ---
 
-## 2) Security & Identity
+## 1) Persistence and state
 
-**Currently**
+Current state:
+- In-memory stores for assets, policies, agreements, transfers, and EDRs
+
+Production requirement:
+- Database-backed stores (Postgres or equivalent)
+- Durable transfer state and retry
+- Persistent EDR cache
+
+## 2) Security and identity
+
+Current state:
 - Mock IAM
-- No OAuth / Keycloak integration
-- Management API has no auth
+- No OAuth/OIDC for management or protocol APIs
 
-**Production**
-- OAuth2 / OIDC for management + protocol
-- Token validation, audience checks
-- Secrets in vault (not seeded in code)
+Production requirement:
+- OAuth2/OIDC integration (Keycloak or equivalent)
+- Token validation, audience checks, and scopes
+- Management API protected by auth
 
----
+## 3) Vault and key management
 
-## 3) Vault & Key Management
+Current state:
+- Seeded keys inside `SeedVaultExtension`
 
-**Currently**
-- Hard‑coded public/private keys in `SeedVaultExtension`
+Production requirement:
+- External vault (HashiCorp, AWS KMS, Azure Key Vault)
+- Key rotation and secret injection
 
-**Production**
-- External vault (Azure Key Vault, HashiCorp, AWS)
-- Rotated keys + proper secret injection
+## 4) Data plane and storage
 
----
+Current state:
+- HTTP proxy only
+- No cloud storage integration
 
-## 4) Data Plane
-
-**Currently**
-- Local proxy HTTP only
-- No external storage integrations
-
-**Production**
-- Real data plane (S3, Azure, MinIO)
-- Scaled data plane instances
+Production requirement:
+- Real data plane runtime
+- S3, Azure Blob, MinIO, or custom storage
 - TLS everywhere
-
----
 
 ## 5) Observability
 
-**Currently**
+Current state:
 - Console logs only
 
-**Production**
+Production requirement:
 - Centralized logging
-- Metrics + tracing
+- Metrics and tracing
 - Alerting on failed transfers
 
----
+## 6) API contracts and validation
 
-## 6) API Contracts
+Current state:
+- No strict schema validation on inference payloads
+- Dev auth in UI
 
-**Currently**
-- UI uses dev auth simulation
-- Inference extension uses internal contract/transfer flow
-
-**Production**
-- Auth on UI endpoints
-- Strong schema validation for inference
-- Consistent error codes and pagination
-
----
+Production requirement:
+- Validate inference schema
+- Consistent error codes
+- Pagination and rate limits
+- Real auth in UI
 
 ## 7) Deployment
 
-**Currently**
-- Single machine, local ports
+Current state:
+- Single-machine, local ports
 
-**Production**
-- Containers + orchestration
-- Config per environment
+Production requirement:
+- Containers and orchestration
+- Environment-specific configs
 - Load balancing
-
----
+- Secrets management
 
 ## 8) Summary
 
-The **filtering + inference extensions themselves are compatible** with a production environment, but they depend on:
-- secure management endpoints
-- persistent stores
-- real IAM
-- hardened data plane
-
-Once those are in place, the extensions can be deployed without major changes.
+The filtering and inference extensions are compatible with production runtimes, but they depend on secure management APIs, persistent stores, a real IAM stack, and a hardened data plane. Once those are in place, the extensions can be deployed without major redesign.

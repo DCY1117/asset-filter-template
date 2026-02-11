@@ -1,20 +1,20 @@
 {
   "@context": {
     "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
-    "hf": "https://pionera.ai/edc/hf#"
+    "daimo": "https://pionera.ai/edc/daimo#"
   },
   "@id": "model-iris-multiclass-v1",
   "properties": {
     "name": "Iris Multiclass Classifier v1",
     "contenttype": "application/octet-stream",
-    "hf:pipeline_tag": "text-classification",
-    "hf:license": "Apache-2.0",
-    "hf:tags": ["iris", "demo", "multiclass"],
-    "hf:library_name": "scikit-learn",
-    "hf:datasets": ["iris"],
-    "hf:language": ["en"],
-    "hf:base_model": "pionera/base-model",
-    "hf:metrics": {
+    "daimo:pipeline_tag": "text-classification",
+    "daimo:license": "Apache-2.0",
+    "daimo:tags": ["iris", "demo", "multiclass"],
+    "daimo:library_name": "scikit-learn",
+    "daimo:datasets": ["iris"],
+    "daimo:language": ["en"],
+    "daimo:base_model": "pionera/base-model",
+    "daimo:metrics": {
       "accuracy": 0.93,
       "f1_macro": 0.91
     }

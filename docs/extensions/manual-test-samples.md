@@ -1,6 +1,6 @@
 # Manual Test Samples (curl)
 
-This is a **copy/paste‑ready** set of curl commands to validate the full stack:
+This is a **copy/paste-ready** set of curl commands to validate the full stack:
 - provider/consumer connectors
 - asset publishing
 - contract + negotiation
@@ -9,7 +9,7 @@ This is a **copy/paste‑ready** set of curl commands to validate the full stack
 
 ---
 
-## 0) Pre‑requisites
+## 0) Prereqs
 
 You need two runtimes running:
 - Provider (with proxy data plane)
@@ -43,7 +43,7 @@ python3 /home/yayu/Projects/PIONERA/asset-filter-template/tools/mock-inference-s
 
 ## 2) Publish AI Assets (Provider)
 
-HF‑style assets:
+Daimo‑style assets:
 ```bash
 curl -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/ai-models/create-asset-ai-classification.json \
   -H 'content-type: application/json' \
@@ -85,17 +85,7 @@ curl -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/cr
 
 ---
 
-## 4) Negotiate Contract (Consumer)
-
-```bash
-curl -X POST "http://localhost:29193/management/v3/contractnegotiations" \
-  -H 'Content-Type: application/json' \
-  -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/negotiate-contract.json -s | jq
-```
-
----
-
-## 5) Catalog Fetch (Consumer)
+## 4) Catalog Fetch (Consumer)
 
 ```bash
 curl -X POST "http://localhost:29193/management/v3/catalog/request" \
@@ -105,39 +95,55 @@ curl -X POST "http://localhost:29193/management/v3/catalog/request" \
 
 ---
 
+## 5) Negotiate Contract (Consumer)
+
+From the catalog output, copy the contract offer id:
+`dcat:dataset.odrl:hasPolicy.@id`
+
+Update `resources/requests/negotiate-contract.json`:
+- Replace the policy `@id` with the copied offer id
+
+```bash
+curl -X POST "http://localhost:29193/management/v3/contractnegotiations" \
+  -H 'Content-Type: application/json' \
+  -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/negotiate-contract.json -s | jq
+```
+
+---
+
 ## 6) Filtering Extension Tests
 
-HF profile (task):
+Daimo profile (task):
 ```bash
-curl -X POST "http://localhost:29191/api/filter/catalog?profile=hf&task=text-classification" \
+curl -X POST "http://localhost:29191/api/filter/catalog?profile=daimo&task=text-classification" \
   -H 'Content-Type: application/json' \
   -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/fetch-catalog.json -s | jq
 ```
 
 Multi‑value (task in list):
 ```bash
-curl -X POST "http://localhost:29191/api/filter/catalog?profile=hf&task=text-classification,feature-extraction" \
+curl -X POST "http://localhost:29191/api/filter/catalog?profile=daimo&task=text-classification,feature-extraction" \
   -H 'Content-Type: application/json' \
   -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/fetch-catalog.json -s | jq
 ```
 
 Generic filters:
 ```bash
-curl -X POST "http://localhost:29191/api/filter/catalog?filter=properties.hf:license=MIT,Apache-2.0" \
+curl -X POST "http://localhost:29191/api/filter/catalog?filter=properties.daimo:license=MIT,Apache-2.0" \
   -H 'Content-Type: application/json' \
   -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/fetch-catalog.json -s | jq
 ```
 
 Combined filters:
 ```bash
-curl -X POST "http://localhost:29191/api/filter/catalog?filter=properties.hf:license=MIT,Apache-2.0&filter=properties.hf:tags~demo" \
+curl -X POST "http://localhost:29191/api/filter/catalog?filter=properties.daimo:license=MIT,Apache-2.0&filter=properties.daimo:tags~demo" \
   -H 'Content-Type: application/json' \
   -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/fetch-catalog.json -s | jq
 ```
 
 Numeric range (metrics):
 ```bash
-curl -X POST "http://localhost:29191/api/filter/catalog?filter=https%3A%2F%2Fpionera.ai%2Fedc%2Fhf%23metrics.accuracy%3E%3D0.90&filter=https%3A%2F%2Fpionera.ai%2Fedc%2Fhf%23metrics.accuracy%3C%3D0.95" \
+curl -X POST "http://localhost:29191/api/filter/catalog?filter=https%3A%2F%2Fpionera.ai%2Fedc%2Fdaimo%23metrics.accuracy%3E%3D0.90&filter=https%3A%2F%2Fpionera.ai%2Fedc%2Fdaimo%23metrics.accuracy%3C%3D0.95" \
   -H 'Content-Type: application/json' \
   -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/fetch-catalog.json -s | jq
 ```
@@ -165,6 +171,9 @@ curl -X POST "http://localhost:29191/api/infer" \
 ```
 
 Legacy (transferProcessId):
+Before calling the management transfer endpoint, update:
+`resources/requests/start-transfer.json` with the contract agreement id.
+
 ```bash
 curl -X POST "http://localhost:29193/management/v3/transferprocesses" \
   -H "Content-Type: application/json" \

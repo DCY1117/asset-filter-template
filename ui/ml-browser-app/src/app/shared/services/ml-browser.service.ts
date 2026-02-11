@@ -62,7 +62,7 @@ export class MlBrowserService {
 
   private buildFilterQuery(filters?: MLAssetFilter, searchTerm?: string): string {
     const params: string[] = [];
-    params.push('profile=hf');
+    params.push('profile=daimo');
 
     if (searchTerm) {
       params.push(`q=${encodeURIComponent(searchTerm)}`);
@@ -97,13 +97,13 @@ export class MlBrowserService {
     const id = dataset['@id'] || dataset['id'] || 'unknown';
     const name = dataset['name'] || id;
 
-    const hfTags = dataset['https://pionera.ai/edc/hf#tags'] || dataset['hf:tags'] || [];
-    const keywords = Array.isArray(hfTags) ? hfTags : [hfTags].filter(Boolean);
+    const daimoTags = dataset['https://pionera.ai/edc/daimo#tags'] || dataset['daimo:tags'] || [];
+    const keywords = Array.isArray(daimoTags) ? daimoTags : [daimoTags].filter(Boolean);
 
-    const pipelineTag = dataset['https://pionera.ai/edc/hf#pipeline_tag'] || dataset['hf:pipeline_tag'];
-    const libraryName = dataset['https://pionera.ai/edc/hf#library_name'] || dataset['hf:library_name'];
+    const pipelineTag = dataset['https://pionera.ai/edc/daimo#pipeline_tag'] || dataset['daimo:pipeline_tag'];
+    const libraryName = dataset['https://pionera.ai/edc/daimo#library_name'] || dataset['daimo:library_name'];
 
-    const contentType = dataset['contenttype'] || dataset['https://pionera.ai/edc/hf#contenttype'] || '';
+    const contentType = dataset['contenttype'] || dataset['https://pionera.ai/edc/daimo#contenttype'] || '';
 
     return {
       id: String(id),

@@ -1,20 +1,20 @@
 {
   "@context": {
     "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
-    "hf": "https://pionera.ai/edc/hf#"
+    "daimo": "https://pionera.ai/edc/daimo#"
   },
   "@id": "model-text-embedding-v3",
   "properties": {
     "name": "Text Embedding Model v3",
     "contenttype": "application/octet-stream",
-    "hf:pipeline_tag": "feature-extraction",
-    "hf:license": "CC-BY-4.0",
-    "hf:tags": ["embedding", "nlp", "retrieval"],
-    "hf:library_name": "pytorch",
-    "hf:datasets": ["mteb"],
-    "hf:language": ["en"],
-    "hf:base_model": "pionera/base-embedding",
-    "hf:metrics": {
+    "daimo:pipeline_tag": "feature-extraction",
+    "daimo:license": "CC-BY-4.0",
+    "daimo:tags": ["embedding", "nlp", "retrieval"],
+    "daimo:library_name": "pytorch",
+    "daimo:datasets": ["mteb"],
+    "daimo:language": ["en"],
+    "daimo:base_model": "pionera/base-embedding",
+    "daimo:metrics": {
       "mteb_avg": 0.62
     }
   },

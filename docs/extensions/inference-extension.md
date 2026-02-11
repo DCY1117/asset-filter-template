@@ -1,48 +1,38 @@
-# Inference Extension (Consumer‑Side)
+# Inference Extension (Consumer-Side)
 
-This document explains the **inference extension**: how it is wired, how it retrieves EDRs, how it proxies inference calls, and how the response is returned.
+This document explains the inference extension: inputs, internal flow, error cases, and testing.
 
 ---
 
 ## 1) Goal
 
-Provide a consumer‑side API that:
+Provide a consumer-side API that lets the UI call a model endpoint using only an `assetId` and a payload. The extension handles transfer + EDR resolution internally.
 
-1. Uses an **asset ID** to locate an existing contract agreement
-2. Starts a transfer automatically (no transfer ID exposed)
-3. Retrieves the EDR (endpoint + token)
-4. Sends an inference request to the provider proxy
-5. Returns the **raw response** from the model endpoint
-
-Typical flow:
-1. Use `/api/filter/catalog` to find assets
-2. Negotiate and obtain a **contract agreement** (one‑time)
-3. Call `/api/infer` with the **asset ID** (transfer is started internally)
-
----
+Flow summary:
+1. Filter catalog to find an asset
+2. Negotiate a contract (one-time)
+3. Call `/api/infer` with `assetId` and `payload`
 
 ## 2) Endpoint
 
-```
+```text
 POST /api/infer
 ```
 
-Base URL (consumer default):
-```
+Default URL:
+```text
 http://localhost:29191/api/infer
 ```
 
-Default transfer settings (from `consumer-configuration.properties`):
+## 3) Default transfer config
+
+Configured in `resources/configuration/consumer-configuration.properties`:
 - `asset.infer.connector.id=provider`
 - `asset.infer.counterparty.address=http://localhost:19194/protocol`
 - `asset.infer.protocol=dataspace-protocol-http`
 - `asset.infer.transfer.type=HttpData-PULL`
 
----
-
-## 3) Request Format
-
-Recommended request (asset‑based, transfer created internally):
+## 4) Request format (recommended)
 
 ```json
 {
@@ -58,34 +48,51 @@ Recommended request (asset‑based, transfer created internally):
 }
 ```
 
-Where:
-- `assetId` is the model ID returned by catalog filtering
-- The transfer ID is created internally and never exposed to the UI
-- `path` is optional: if omitted, the client/UI uses `hf:inference_path` or falls back to `/infer`
+Notes:
+- `assetId` is required.
+- `path` is optional. If omitted, the UI uses `daimo:inference_path` or falls back to `/infer`.
+- The extension does not negotiate. You must already have a contract agreement.
+- For direct API callers (not the UI), include `path` or ensure the asset has `daimo:inference_path`. Otherwise the request hits the base URL.
 
-Note: the extension **does not negotiate**. It will return an error if no existing contract agreement is found for the asset.
+## 5) Internal steps (what the extension does)
 
-Legacy request (uses transfer process ID):
+1. Parses request JSON
+2. Resolves an EDR:
+   - If `endpoint` + `authorization` are provided, uses them
+   - Else, if `assetId` is provided, it looks up a matching contract agreement and starts a transfer
+   - Else, if `contractId` is provided, it starts a transfer directly
+   - Else, if `transferProcessId` is provided, it waits for the EDR
+3. Sends a request to the provider proxy endpoint with method + headers + payload
+4. Returns the raw response
 
-```json
-{
-  "transferProcessId": "YOUR_TRANSFER_ID",
-  "method": "POST",
-  "path": "/infer",
-  "headers": {
-    "Content-Type": "application/json"
-  },
-  "payload": {
-    "inputs": "Hello from Pionera"
-  }
-}
+Agreement lookup:
+```text
+POST {managementBaseUrl}/v3/contractagreements/request
 ```
 
----
+EDR lookup:
+```text
+GET {managementBaseUrl}/v3/edrs/{transferProcessId}/dataaddress
+```
 
-## 4) Direct EDR Mode (Optional)
+## 6) Error cases
 
-If you already have EDR info, you can skip the management call:
+No agreement found:
+```json
+{"error":"No contract agreement found for assetId"}
+```
+
+Missing required fields:
+```json
+{"error":"Missing assetId/transferProcessId/contractId or endpoint/authorization"}
+```
+
+Non-endpoint asset:
+```json
+{"error":"EDR is missing endpoint (asset is not an HTTP endpoint)"}
+```
+
+## 7) Direct EDR mode (optional)
 
 ```json
 {
@@ -97,75 +104,41 @@ If you already have EDR info, you can skip the management call:
 }
 ```
 
----
-
-## 5) How It Works Internally
-
-The controller:
-
-1. Reads the request JSON
-2. Resolves EDR:
-   - If `endpoint` + `authorization` are provided, uses them
-   - If `assetId` is provided, it **looks up a matching contract agreement**, starts a transfer internally and waits for the EDR
-   - If `contractId` is provided, it starts a transfer directly (legacy)
-   - Otherwise, calls:
-     ```
-     GET {managementBaseUrl}/v3/edrs/{transferProcessId}/dataaddress
-     ```
-3. Builds a proxy request to the provider endpoint
-4. Returns the response body (no processing)
-
-Agreement lookup uses:
-```
-POST {managementBaseUrl}/v3/contractagreements/request
-```
-The extension selects the **latest** agreement that matches the requested asset ID.
-
-If the resolved EDR has **no endpoint**, the API returns:
-```
-{"error":"EDR is missing endpoint (asset is not an HTTP endpoint)"}
-```
-
----
-
-## 6) Files
+## 8) Files
 
 - `connector/src/main/java/com/pionera/assetfilter/infer/InferenceExtension.java`
 - `connector/src/main/java/com/pionera/assetfilter/infer/InferenceController.java`
-- `connector/src/main/resources/META-INF/services/org.eclipse.edc.spi.system.ServiceExtension`
 - `resources/requests/infer-example.json`
-- `tools/mock-inference-server.py`
 - `resources/requests/create-asset-infer-mock.json`
+- `tools/mock-inference-server.py`
 
----
+## 9) Local mock inference test
 
-## 7) Next Improvements (Optional)
-
-- Response summarization (classification/embedding/generation)
-- Schema‑driven formatting per task type
-- Streaming responses for long generation tasks
-- Caching or response persistence
-
----
-
-## 8) Local Mock Inference Server (For Testing)
-
-To test inference end‑to‑end without a real model, run:
-
+Start server:
 ```bash
 python3 /home/yayu/Projects/PIONERA/asset-filter-template/tools/mock-inference-server.py
 ```
 
-Create a mock asset that points to it:
-
+Create asset:
 ```bash
 curl -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/create-asset-infer-mock.json \
   -H 'content-type: application/json' \
   http://localhost:19193/management/v3/assets -s | jq
 ```
 
-This asset uses:
+Call inference:
+```bash
+curl -X POST "http://localhost:29191/api/infer" \
+  -H "Content-Type: application/json" \
+  -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/infer-example.json -s | jq
 ```
-baseUrl = http://localhost:9000
-path    = /infer
+
+Expected output:
+```json
+{
+  "model": "mock-inference-v1",
+  "task": "echo",
+  "input": { "inputs": "Hello from Pionera" },
+  "result": { "label": "OK", "score": 1.0 }
+}
 ```

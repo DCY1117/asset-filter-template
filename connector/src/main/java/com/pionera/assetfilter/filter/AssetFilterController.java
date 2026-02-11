@@ -48,8 +48,8 @@ import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 @Produces(MediaType.APPLICATION_JSON)
 public class AssetFilterController {
 
-    private static final String HF_NAMESPACE = "https://pionera.ai/edc/hf#";
-    private static final Set<String> HF_FILTER_KEYS = Set.of(
+    private static final String DAIMO_NAMESPACE = "https://pionera.ai/edc/daimo#";
+    private static final Set<String> DAIMO_FILTER_KEYS = Set.of(
             "task", "license", "tag", "tags", "library", "dataset", "language", "base_model", "name"
     );
 
@@ -190,9 +190,9 @@ public class AssetFilterController {
                 continue;
             }
 
-            if ("hf".equalsIgnoreCase(profile) && HF_FILTER_KEYS.contains(key.toLowerCase(Locale.ROOT))) {
-                var hfKey = mapHfKey(key);
-                filters.add(new FilterCondition(hfKey, "=", splitValues(entry.getValue())));
+            if ("daimo".equalsIgnoreCase(profile) && DAIMO_FILTER_KEYS.contains(key.toLowerCase(Locale.ROOT))) {
+                var daimoKey = mapDaimoKey(key);
+                filters.add(new FilterCondition(daimoKey, "=", splitValues(entry.getValue())));
                 continue;
             }
         }
@@ -244,10 +244,10 @@ public class AssetFilterController {
         var q = query.toLowerCase(Locale.ROOT);
         return containsValue(extractValues(dataset, "name"), q) ||
                 containsValue(extractValues(dataset, "id"), q) ||
-                containsValue(extractValues(dataset, "hf:tags"), q) ||
-                containsValue(extractValues(dataset, "hf:pipeline_tag"), q) ||
-                containsValue(extractValues(dataset, "hf:base_model"), q) ||
-                containsValue(extractValues(dataset, "hf:library_name"), q);
+                containsValue(extractValues(dataset, "daimo:tags"), q) ||
+                containsValue(extractValues(dataset, "daimo:pipeline_tag"), q) ||
+                containsValue(extractValues(dataset, "daimo:base_model"), q) ||
+                containsValue(extractValues(dataset, "daimo:library_name"), q);
     }
 
     private boolean matchesContains(List<JsonNode> values, List<String> targets) {
@@ -446,10 +446,10 @@ public class AssetFilterController {
         var candidates = new ArrayList<String>();
         candidates.add(segment);
 
-        if (segment.startsWith("hf:")) {
-            candidates.add(HF_NAMESPACE + segment.substring(3));
+        if (segment.startsWith("daimo:")) {
+            candidates.add(DAIMO_NAMESPACE + segment.substring(6));
         } else if (isFirst && "metrics".equals(segment)) {
-            candidates.add(HF_NAMESPACE + "metrics");
+            candidates.add(DAIMO_NAMESPACE + "metrics");
         }
 
         for (String candidate : candidates) {
@@ -491,15 +491,15 @@ public class AssetFilterController {
         return null;
     }
 
-    private String mapHfKey(String key) {
+    private String mapDaimoKey(String key) {
         return switch (key.toLowerCase(Locale.ROOT)) {
-            case "task" -> "hf:pipeline_tag";
-            case "license" -> "hf:license";
-            case "tag", "tags" -> "hf:tags";
-            case "library" -> "hf:library_name";
-            case "dataset" -> "hf:datasets";
-            case "language" -> "hf:language";
-            case "base_model" -> "hf:base_model";
+            case "task" -> "daimo:pipeline_tag";
+            case "license" -> "daimo:license";
+            case "tag", "tags" -> "daimo:tags";
+            case "library" -> "daimo:library_name";
+            case "dataset" -> "daimo:datasets";
+            case "language" -> "daimo:language";
+            case "base_model" -> "daimo:base_model";
             case "name" -> "name";
             default -> key;
         };

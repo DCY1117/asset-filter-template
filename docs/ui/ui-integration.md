@@ -1,131 +1,92 @@
 # UI Integration (ML Browser)
 
-This document explains how the UI connects to the EDC extensions in `asset-filter-template`, how filtering works, how the current auth simulation works, and how to troubleshoot CORS.
+This document explains how the UI connects to the extensions and how to troubleshoot common issues (auth, CORS, empty catalog).
 
-## 1) What This UI Talks To
+---
 
-**Main entrypoints (consumer-side)**
-- Filter extension (server-side filtering): `http://localhost:29191/api/filter/catalog`
-- Inference extension (UI wired): `http://localhost:29191/api/infer`
-- Consumer Management API (catalog, transfers, negotiations): `http://localhost:29193/management`
-- Consumer DSP endpoint (protocol): `http://localhost:29194/protocol`
+## 1) Runtime endpoints used by the UI
 
-**Provider-side**
-- Provider DSP endpoint (used in catalog requests): `http://localhost:19194/protocol`
-- Provider Management API (assets, policies, contract defs): `http://localhost:19193/management`
+Defined in `ui/ml-browser-app/src/environments/environment.ts`.
 
-These defaults live in:
-- `ui/ml-browser-app/src/environments/environment.ts`
+Consumer-side endpoints:
+- Filter extension: `http://localhost:29191/api/filter/catalog`
+- Inference extension: `http://localhost:29191/api/infer`
+- Consumer management API: `http://localhost:29193/management`
+- Consumer DSP endpoint: `http://localhost:29194/protocol`
 
-## 2) How Filtering Works (Server-Side)
+Provider-side endpoints:
+- Provider DSP endpoint: `http://localhost:19194/protocol`
+- Provider management API: `http://localhost:19193/management`
 
-**Code path**
-- UI service: `ui/ml-browser-app/src/app/shared/services/ml-browser.service.ts`
-- Method: `getPaginatedMLAssets()` -> `getFilteredCatalog()`
-- The UI calls the filter extension, not the management API, to apply filter params on the server.
+## 2) How filtering works in the UI
 
-**Catalog request body**
-The UI always sends the required DSP catalog body:
-- `counterPartyAddress` = provider DSP endpoint (`http://localhost:19194/protocol`)
-- `protocol` = `dataspace-protocol-http`
+Code path:
+- `ml-browser.service.ts` builds the catalog request body
+- `ml-assets-browser.component.ts` calls the filter API
+- Filters are applied server-side in `/api/filter/catalog`
 
-This is built in:
-- `buildCatalogRequestBody()` inside `ml-browser.service.ts`
+Important behavior:
+- The UI keeps an unfiltered baseline list so filter options do not disappear.
+- Filter options are derived from `allAssets` while results are from `filteredAssets`.
 
-**Query params**
-The UI passes filter parameters as query params to `/api/filter/catalog`.
-- Example: `profile=hf&task=text-classification`
-- Multiple filters can be passed using repeated `filter=` query params.
+## 3) How inference works in the UI
 
-## 3) How the UI Uses Extensions Today
+The execution page calls `/api/infer` with:
+- `assetId`
+- `payload`
+- optional `path` (auto-detected from `daimo:inference_path`)
 
-**Filtering extension**
-- Used by the ML assets list.
-- UI defaults to `profile=hf` when fetching catalog.
-- The filter extension returns a DSP catalog, and the UI maps `dcat:dataset` to `MLAsset` cards.
+Executable assets are determined by heuristics:
+- `contenttype` includes `application/json`
+- or tags include `inference` or `endpoint`
 
-**Inference extension**
-- The UI model execution page now calls `environment.runtime.inferApiUrl` (defaults to `http://localhost:29191/api/infer`).  
-- The UI only sends **assetId + payload**. The inference extension finds an existing agreement, starts the transfer, and resolves the EDR internally.
-- The execution form only asks for the payload. The request path is **auto‑detected** from asset metadata (`hf:inference_path`) and falls back to `/infer`.
-- The executable list is built from the catalog and filtered client‑side by heuristics:
-  - `contenttype` includes `application/json`, **or**
-  - tags include `inference` or `endpoint`.
-You still need a **contract agreement** in the system (one‑time). Run the usual **policy → contract definition → negotiation** flow first.
+The UI does not ask for transfer IDs. The extension resolves EDRs internally.
 
-## 4) Dev Auth Simulation
+## 4) Dev auth simulation
 
-We are **not** using OAuth/Keycloak yet. The UI simulates login locally.
+The UI uses a local dev-auth mode when:
+```text
+environment.runtime.devAuth.enabled = true
+```
 
-**Where it lives**
-- `ui/ml-browser-app/src/app/dev-auth/mock-auth.ts`
-- `AuthService` uses dev auth when `environment.runtime.devAuth.enabled = true`
+Valid dev credentials:
+- `user-conn-user1-demo` / `user1123`
+- `user-conn-user2-demo` / `user2123`
 
-**Behavior**
-- A fake token is stored in `localStorage` under `ml_assets_auth_token`.
-- User info is stored under `ml_assets_current_user`.
-- This is safe to remove later when real OAuth is configured.
+Auth storage:
+- Token stored in `localStorage` key `ml_assets_auth_token`
+- User stored in `ml_assets_current_user`
 
-## 5) CORS (Why the UI Fails With “Unknown Error”)
+To disable dev-auth, set `devAuth.enabled=false` and wire real OAuth.
 
-When the UI runs at `http://127.0.0.1:4200` and the API runs at `http://localhost:29191`, the browser treats them as **different origins** and blocks requests unless CORS headers are present.
+## 5) CORS troubleshooting
 
-**Symptoms**
-- UI shows: `Http failure response ... 0 Unknown Error`
-- Browser console shows: `No 'Access-Control-Allow-Origin' header...`
+Symptoms:
+- UI shows `Http failure response ... 0 Unknown Error`
+- Browser console shows CORS block
 
-**Fix (consumer config)**
-Ensure CORS is enabled in:
-- `resources/configuration/consumer-configuration.properties`
-
-This runtime reads CORS from **Jersey** settings, so use these keys:
+Fix in consumer config (`resources/configuration/consumer-configuration.properties`):
 - `edc.web.rest.cors.enabled=true`
 - `edc.web.rest.cors.origins=http://localhost:4200`
 - `edc.web.rest.cors.methods=GET,POST,PUT,DELETE,OPTIONS`
 - `edc.web.rest.cors.headers=origin, content-type, accept, authorization`
 
-Important: **do not list multiple origins in a single header value** (e.g., `a,b`). Browsers reject it.  
-If you want to use `http://127.0.0.1:4200`, set the origin to that **single** value and open the UI at the same host.
+Important:
+- Do not list multiple origins in a single header value. Browsers reject it.
+- If you use `127.0.0.1:4200`, set that as the single allowed origin and open UI using 127.0.0.1.
 
-**Switching between localhost and 127.0.0.1**
-- For `localhost`:
-  - `edc.web.rest.cors.origins=http://localhost:4200`
-  - Open UI at `http://localhost:4200`
-- For `127.0.0.1`:
-  - `edc.web.rest.cors.origins=http://127.0.0.1:4200`
-  - Open UI at `http://127.0.0.1:4200`
+Restart consumer after changes.
 
-If you want both at once, you’d need a dynamic CORS filter that reflects the request’s `Origin` header from an allowlist. The current runtime config does not support multiple origins in a single header.
+## 6) Empty catalog in UI
 
-Then **restart the consumer** connector.
+If the list is empty:
+- Provider is not running
+- Assets not created
+- Policy + contract definition missing
 
-If the UI also calls provider management endpoints (asset creation, policies, contract definitions), make sure the same CORS settings exist in:
-- `resources/configuration/provider-configuration.properties`
-
-**Quick CORS check**
+Quick check (consumer):
 ```bash
-curl -i -X OPTIONS "http://localhost:29191/api/filter/catalog" \
-  -H "Origin: http://localhost:4200" \
-  -H "Access-Control-Request-Method: POST" \
-  -H "Access-Control-Request-Headers: content-type"
+curl -X POST "http://localhost:29193/management/v3/catalog/request" \
+  -H 'Content-Type: application/json' \
+  -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/fetch-catalog.json -s | jq
 ```
-
-## 6) Minimal End‑to‑End Test (UI)
-
-**Backend prerequisites**
-- Provider connector running.
-- Consumer connector running.
-- Assets, policies, and contract definitions created.
-
-**UI**
-- Start Angular app with `npm start` (from `ui/ml-browser-app`).
-- Open `http://localhost:4200`.
-
-**Expected**
-- Assets list is populated.
-- Filters apply by query params to `/api/filter/catalog`.
-
-If the list is empty, check:
-- Provider DSP endpoint is correct in `environment.runtime.providerProtocolUrl`.
-- Catalog request body includes `counterPartyAddress` and `protocol`.
-- Provider has published assets + contract definitions.

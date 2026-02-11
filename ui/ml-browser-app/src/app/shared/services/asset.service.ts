@@ -34,14 +34,27 @@ export class AssetService {
    * @returns EDC-compatible properties with 'asset:prop:' prefixes
    */
   private transformPropertiesToEDC(properties: any): any {
+    const name = properties['name'] || 'Untitled Asset';
+    const version = properties['version'] || '1.0';
+    const contentType = properties['contenttype'] || 'application/octet-stream';
+    const shortDescription = properties['shortDescription'] || '';
+    const description = properties['dcterms:description'] || shortDescription;
+    const keywords = properties['dcat:keyword'] || [];
+
     const edcProperties: any = {
-      'asset:prop:name': properties['name'] || 'Untitled Asset',
-      'asset:prop:version': properties['version'] || '1.0',
-      'asset:prop:contenttype': properties['contenttype'] || 'application/octet-stream',
+      'asset:prop:name': name,
+      'asset:prop:version': version,
+      'asset:prop:contenttype': contentType,
       'asset:prop:type': properties['assetType'] || 'MLModel',
-      'asset:prop:description': properties['dcterms:description'] || properties['shortDescription'] || '',
-      'asset:prop:shortDescription': properties['shortDescription'] || '',
-      'dcat:keyword': properties['dcat:keyword'] || []
+      'asset:prop:description': description,
+      'asset:prop:shortDescription': shortDescription,
+      'dcat:keyword': keywords,
+      // Duplicate key names to align with catalog templates and UI parsing
+      'name': name,
+      'version': version,
+      'contenttype': contentType,
+      'description': description,
+      'shortDescription': shortDescription
     };
     
     // Add optional fields if present
@@ -50,9 +63,77 @@ export class AssetService {
     }
     if (properties['dcterms:format']) {
       edcProperties['asset:prop:format'] = properties['dcterms:format'];
+      edcProperties['format'] = properties['dcterms:format'];
     }
     
     return edcProperties;
+  }
+
+  /**
+   * Map ML metadata and form fields to Daimo-style properties
+   */
+  private buildDaimoProperties(properties: any): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+
+    const mlMetadata = properties?.assetData?.mlMetadata || {};
+
+    const addIfPresent = (key: string, value: any) => {
+      if (value === undefined || value === null) {
+        return;
+      }
+      if (Array.isArray(value) && value.length === 0) {
+        return;
+      }
+      if (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0) {
+        return;
+      }
+      result[`daimo:${key}`] = value;
+    };
+
+    const keywords = properties?.['dcat:keyword'];
+    const tags = Array.isArray(keywords) ? keywords : (keywords ? [keywords] : []);
+    if (tags.length > 0) {
+      result['daimo:tags'] = tags;
+    }
+
+    const task = Array.isArray(mlMetadata.task) ? mlMetadata.task[0] : mlMetadata.task;
+    if (task) {
+      result['daimo:pipeline_tag'] = task;
+    }
+
+    const library = Array.isArray(mlMetadata.library) ? mlMetadata.library[0] : mlMetadata.library;
+    const framework = Array.isArray(mlMetadata.framework) ? mlMetadata.framework[0] : mlMetadata.framework;
+    if (library) {
+      result['daimo:library_name'] = library;
+    } else if (framework) {
+      result['daimo:library_name'] = framework;
+    }
+
+    const datasets: string[] = [];
+    if (mlMetadata.trainingData) {
+      datasets.push(mlMetadata.trainingData);
+    }
+    if (mlMetadata.validationData) {
+      datasets.push(mlMetadata.validationData);
+    }
+    if (datasets.length > 0) {
+      result['daimo:datasets'] = datasets;
+    }
+
+    // Map all ML metadata fields to daimo:* for completeness
+    addIfPresent('task', mlMetadata.task);
+    addIfPresent('subtask', mlMetadata.subtask);
+    addIfPresent('algorithm', mlMetadata.algorithm);
+    addIfPresent('library', mlMetadata.library);
+    addIfPresent('framework', mlMetadata.framework);
+    addIfPresent('software', mlMetadata.software);
+    addIfPresent('format', mlMetadata.format);
+    addIfPresent('metrics', mlMetadata.metrics);
+    addIfPresent('hyperparameters', mlMetadata.hyperparameters);
+    addIfPresent('trainingData', mlMetadata.trainingData);
+    addIfPresent('validationData', mlMetadata.validationData);
+
+    return result;
   }
 
   /**
@@ -65,18 +146,25 @@ export class AssetService {
     
     // Transform properties to EDC format
     const edcProperties = this.transformPropertiesToEDC(assetEntryDto.properties);
+
+    // Add Daimo-style metadata to properties
+    const daimoProperties = this.buildDaimoProperties(assetEntryDto.properties);
     
     // Build EDC-compatible payload
     const body = {
       "@context": {
         "@vocab": EDC_CONTEXT,
         "dcterms": CONTEXTS.dcterms,
-        "dcat": CONTEXTS.dcat
+        "dcat": CONTEXTS.dcat,
+        "daimo": "https://pionera.ai/edc/daimo#"
       },
       "asset": {
         "@type": "Asset",
         "@id": assetEntryDto['@id'],
-        "properties": edcProperties
+        "properties": {
+          ...edcProperties,
+          ...daimoProperties
+        }
       },
       "dataAddress": assetEntryDto.dataAddress
     }

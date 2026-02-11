@@ -1,6 +1,8 @@
 # Commands Reference (Asset Filter Template)
 
-This is the full, step‑by‑step workflow in the same style as the Samples tutorials. Each step includes what it does, the command, and a sample output or troubleshooting note.
+This is the full, step-by-step workflow in the same style as the Samples tutorials. Each step includes what it does, the command, and a sample output or troubleshooting note.
+
+---
 
 ## Prereqs
 
@@ -123,8 +125,8 @@ From the catalog output, copy the contract offer id at:
 `dcat:dataset.odrl:hasPolicy.@id`
 
 Update `resources/requests/negotiate-contract.json`:
-1. Replace `{{offerId}}` with the copied offer id.
-2. Replace `{{consumerId}}` and `{{providerId}}` if you changed connector IDs.
+1. Replace the policy `@id` with the copied offer id.
+2. Replace `assigner`/`target` if you changed connector IDs or asset ids.
 
 Then run:
 ```bash
@@ -155,23 +157,23 @@ When finalized, the agreement id is at:
 
 This calls the consumer filter extension at `/api/filter/catalog` and applies server‑side filters.
 
-HF profile + task filter:
+Daimo profile + task filter:
 ```bash
-curl -X POST "http://localhost:29191/api/filter/catalog?profile=hf&task=text-classification" \
+curl -X POST "http://localhost:29191/api/filter/catalog?profile=daimo&task=text-classification" \
   -H 'Content-Type: application/json' \
   -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/fetch-catalog.json -s | jq
 ```
 
 Multi‑value filter:
 ```bash
-curl -X POST "http://localhost:29191/api/filter/catalog?profile=hf&task=text-classification,feature-extraction" \
+curl -X POST "http://localhost:29191/api/filter/catalog?profile=daimo&task=text-classification,feature-extraction" \
   -H 'Content-Type: application/json' \
   -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/fetch-catalog.json -s | jq
 ```
 
 Generic filter (no profile):
 ```bash
-curl -X POST "http://localhost:29191/api/filter/catalog?filter=properties.hf:license=MIT,Apache-2.0" \
+curl -X POST "http://localhost:29191/api/filter/catalog?filter=properties.daimo:license=MIT,Apache-2.0" \
   -H 'Content-Type: application/json' \
   -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/fetch-catalog.json -s | jq
 ```
@@ -222,8 +224,12 @@ If the UI fails to load models, see **Troubleshooting**.
 **CORS errors from UI**
 - In `resources/configuration/consumer-configuration.properties`, set:
   - `edc.web.rest.cors.enabled=true`
-  - `edc.web.rest.cors.allowed.origins=http://localhost:4200,http://127.0.0.1:4200`
+  - `edc.web.rest.cors.origins=http://localhost:4200`
 - Restart consumer.
+
+Important:
+- Do not list multiple origins in a single header value. Browsers reject it.
+- If you use `127.0.0.1:4200`, set that as the single allowed origin and open UI using `127.0.0.1`.
 
 **Catalog filter says `Invalid catalog request`**
 - Your request body must include `counterPartyAddress` and `protocol` in `fetch-catalog.json`.
@@ -234,4 +240,4 @@ If the UI fails to load models, see **Troubleshooting**.
 **Inference returns empty or 404**
 - Ensure contract negotiation finished.
 - Ensure mock inference server is running.
-- Asset must be an endpoint asset with `contenttype: application/json` and `hf:inference_path`.
+- Asset must be an endpoint asset with `contenttype: application/json` and `daimo:inference_path`.

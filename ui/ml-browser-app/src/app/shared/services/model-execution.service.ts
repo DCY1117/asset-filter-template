@@ -83,8 +83,8 @@ export class ModelExecutionService {
 
   private extractInferencePath(asset: MLAsset): string {
     const candidates = [
-      'https://pionera.ai/edc/hf#inference_path',
-      'hf:inference_path',
+      'https://pionera.ai/edc/daimo#inference_path',
+      'daimo:inference_path',
       'inference_path',
       'inferencePath',
       'path'
