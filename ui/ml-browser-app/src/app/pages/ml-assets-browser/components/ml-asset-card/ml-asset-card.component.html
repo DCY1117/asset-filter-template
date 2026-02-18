@@ -35,6 +35,18 @@
       </mat-chip-set>
     </div>
 
+    <div class="metadata-tags" *ngIf="modelMetadataChips.length > 0">
+      <button type="button" class="metadata-toggle" (click)="toggleMetadata()">
+        <mat-icon>{{ metadataExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+        <span>Model Metadata ({{ modelMetadataChips.length }})</span>
+      </button>
+      <mat-chip-set class="keyword-chips" *ngIf="metadataExpanded">
+        <mat-chip *ngFor="let metadata of modelMetadataChips" [title]="metadata">
+          {{ metadata }}
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+
     <!-- Asset Info -->
     <div class="asset-info" *ngIf="asset.contentType || asset.format">
       <div class="info-item" *ngIf="asset.contentType">
@@ -69,9 +81,10 @@
       mat-button 
       (click)="onContractAction()" 
       class="action-btn"
+      [disabled]="!isLocalAsset() && (asset.hasAgreement || asset.negotiationInProgress)"
       [ngClass]="isLocalAsset() ? 'btn-contract' : 'btn-negotiate'">
-      <mat-icon>{{ isLocalAsset() ? 'description' : 'handshake' }}</mat-icon>
-      <span>{{ isLocalAsset() ? 'Create Contract' : 'Negotiate' }}</span>
+      <mat-icon>{{ getContractActionIcon() }}</mat-icon>
+      <span>{{ getContractActionText() }}</span>
     </button>
   </mat-card-actions>
 </mat-card>

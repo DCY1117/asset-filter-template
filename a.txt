@@ -1,0 +1,34 @@
+Asset Information
+
+Name: Simple Text Classifier v1
+Content Type: application/json
+Version: 1.0
+Short Description: Rule-based text classifier endpoint
+Description: Local HTTP model endpoint that classifies text as POSITIVE, NEGATIVE, or NEUTRAL.
+Asset Type: MLModel
+Keywords: classification,inference,demo,sentiment
+Byte Size: 1024 (or empty)
+File Format: json
+ML Metadata
+
+Tasks: text-classification
+Subtasks: (empty)
+Algorithms: (empty)
+Libraries: custom-python (or empty if not in list)
+Frameworks: (empty)
+Software: (empty)
+Model Format: json (or empty)
+Storage Information
+
+Storage Destination: HttpData
+Name: simple-classifier-endpoint
+Base URL: http://localhost:9100
+Path: /infer
+Content Type: application/json
+Auth Key: (empty)
+Auth Code: (empty)
+Secret Name: (empty)
+Proxy Body: OFF
+Proxy Path: ON
+Proxy Query Params: OFF
+Proxy Method: OFF

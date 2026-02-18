@@ -17,16 +17,23 @@ This section documents the inference UI and how it calls the inference extension
 
 ## API Calls
 - `POST {inferApiUrl}`
-- `POST {filterApiUrl}` (to list executable assets)
+- `POST {filterApiUrl}` (external assets for execution list)
+- `POST {activeManagementUrl}/v3/assets/request` (local assets for execution list)
+- `POST {activeManagementUrl}/v3/contractagreements/request` (filter external assets to negotiated ones)
 
 ## Functionality
-- Loads executable assets from the catalog.
+- Loads executable assets from the merged assets list (local + external).
 - Marks assets as executable when `contenttype` includes `application/json` or tags include `inference` or `endpoint`.
+- Visibility rule for execution list:
+  - Local assets are always shown when technically executable.
+  - External assets are shown only when the current connector has a contract agreement for that asset.
 - Sends `assetId`, `path`, and `payload` to `/api/infer`.
 - Renders raw response as JSON.
 
 ## Status
-Working when a contract agreement exists and the asset has a valid inference path.
+Working for:
+- local executable assets (no contract required)
+- external executable assets with a contract agreement and valid inference path.
 
 ## Known Gaps
 - No streaming or progress updates.

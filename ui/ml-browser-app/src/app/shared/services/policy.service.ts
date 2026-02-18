@@ -16,6 +16,7 @@ import { expandArray, PolicyDefinition, QuerySpec, EDC_CONTEXT, JSON_LD_DEFAULT_
 import { PolicyDefinitionInput } from '@think-it-labs/edc-connector-client';
 import { environment } from '../../../environments/environment';
 import { CONTEXTS } from '../utils/app.constants';
+import { ConnectorContextService } from './connector-context.service';
 
 // Policy models (simplified for now - can be extended later)
 export interface PolicyDefinitionCreateDto {
@@ -33,9 +34,15 @@ export interface PolicyDefinitionDto {
 })
 export class PolicyService {
   private readonly http = inject(HttpClient);
+  private readonly connectorContextService = inject(ConnectorContextService);
 
-  private readonly BASE_URL = `${environment.runtime.managementApiUrl}${environment.runtime.service.policy.baseUrl}`;
-  private readonly COMPLEX_BASE_URL = `${environment.runtime.managementApiUrl}${environment.runtime.service.policy.complexBaseUrl}`;
+  private get baseUrl(): string {
+    return `${this.connectorContextService.getManagementApiUrl()}${environment.runtime.service.policy.baseUrl}`;
+  }
+
+  private get complexBaseUrl(): string {
+    return `${this.connectorContextService.getManagementApiUrl()}${environment.runtime.service.policy.complexBaseUrl}`;
+  }
 
   /**
    * Creates a new policy definition
@@ -51,7 +58,7 @@ export class PolicyService {
     }
 
     return from(lastValueFrom(this.http.post<PolicyDefinition>(
-      `${this.BASE_URL}`, body
+      `${this.baseUrl}`, body
     )));
   }
 
@@ -61,7 +68,7 @@ export class PolicyService {
    */
   public createComplexPolicy(input: PolicyDefinitionCreateDto): Observable<Record<string, unknown>> {
     return from(lastValueFrom(this.http.post<Record<string, unknown>>(
-      `${this.COMPLEX_BASE_URL}`, input
+      `${this.complexBaseUrl}`, input
     )));
   }
 
@@ -74,7 +81,7 @@ export class PolicyService {
       throw new Error('Required parameter id was null or undefined when calling deletePolicy.');
     }
     return from(lastValueFrom(this.http.delete<PolicyDefinition>(
-      `${this.BASE_URL}${environment.runtime.service.policy.get}${id}`
+      `${this.baseUrl}${environment.runtime.service.policy.get}${id}`
     )));
   }
 
@@ -88,7 +95,7 @@ export class PolicyService {
     }
 
     return from(lastValueFrom(this.http.get<PolicyDefinition>(
-      `${this.BASE_URL}${environment.runtime.service.policy.get}${id}`
+      `${this.baseUrl}${environment.runtime.service.policy.get}${id}`
     )));
   }
 
@@ -107,7 +114,7 @@ export class PolicyService {
     }
 
     return from(lastValueFrom(this.http.post<PolicyDefinition[]>(
-      `${this.BASE_URL}${environment.runtime.service.policy.getAll}`, body
+      `${this.baseUrl}${environment.runtime.service.policy.getAll}`, body
     )).then(results => {
       return expandArray(results, () => new PolicyDefinition());
     }));
@@ -127,7 +134,7 @@ export class PolicyService {
     };
 
     return from(lastValueFrom(this.http.post<number>(
-      `${environment.runtime.managementApiUrl}${environment.runtime.service.policy.count}`, body
+      `${this.connectorContextService.getManagementApiUrl()}${environment.runtime.service.policy.count}`, body
     )));
   }
 
@@ -146,7 +153,7 @@ export class PolicyService {
     }
 
     return from(lastValueFrom(this.http.post<PolicyDefinitionDto[]>(
-      `${this.COMPLEX_BASE_URL}${environment.runtime.service.policy.getAll}`, body
+      `${this.complexBaseUrl}${environment.runtime.service.policy.getAll}`, body
     )).then(results => {
       return results;
     }));

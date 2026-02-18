@@ -10,10 +10,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { firstValueFrom } from 'rxjs';
 
 import { AssetService } from '../../shared/services/asset.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { VocabularyService, VocabularyOptions } from '../../shared/services/vocabulary.service';
+import { AuthService } from '../../shared/services/auth.service';
 import {
   AssetFormData,
   AssetInput,
@@ -65,6 +67,7 @@ export class AssetCreateComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private router = inject(Router);
   private vocabularyService = inject(VocabularyService);
+  private authService = inject(AuthService);
   
   // Vocabulary options loaded from JS_Pionera_Ontology
   vocabularyOptions = signal<VocabularyOptions>({
@@ -85,9 +88,20 @@ export class AssetCreateComponent implements OnInit {
   
   // Storage type options
   storageTypes = STORAGE_TYPES;
+
+  // Common content types for ML assets
+  contentTypes: string[] = [
+    'application/octet-stream',
+    'application/json',
+    'application/x-pickle',
+    'application/onnx',
+    'application/x-hdf5',
+    'application/x-parquet',
+    'text/csv',
+    'text/plain'
+  ];
   
   // Basic asset information
-  id = '';
   name = '';
   version = '1.0';
   contenttype = 'application/octet-stream';
@@ -169,9 +183,21 @@ export class AssetCreateComponent implements OnInit {
    * Save and create the asset
    */
   async onSave(): Promise<void> {
+    const generatedId = this.buildGeneratedAssetId(this.name);
+    if (!generatedId) {
+      this.notificationService.showError('Asset ID could not be generated. Please enter a valid name.');
+      return;
+    }
+
+    const duplicateNameExists = await this.hasDuplicateNameForCurrentUser(this.name);
+    if (duplicateNameExists) {
+      this.notificationService.showError(`An asset with name "${this.name.trim()}" already exists for this user.`);
+      return;
+    }
+
     // Validate required fields
     const formData: AssetFormData = {
-      id: this.id,
+      id: generatedId,
       name: this.name,
       version: this.version,
       contenttype: this.contenttype,
@@ -408,5 +434,63 @@ export class AssetCreateComponent implements OnInit {
    */
   onCancel(): void {
     this.navigateToAssets();
+  }
+
+  get generatedAssetId(): string {
+    return this.buildGeneratedAssetId(this.name);
+  }
+
+  private async hasDuplicateNameForCurrentUser(name: string): Promise<boolean> {
+    const normalizedTargetName = this.normalizeName(name);
+    if (!normalizedTargetName) {
+      return false;
+    }
+
+    try {
+      const assets = await firstValueFrom(this.assetService.requestAssets());
+      return assets.some((asset: any) => {
+        const existingName = this.extractAssetName(asset);
+        return this.normalizeName(existingName) === normalizedTargetName;
+      });
+    } catch (error) {
+      console.error('Error checking existing assets for duplicate names:', error);
+      this.notificationService.showError('Could not validate duplicate names. Please try again.');
+      return true;
+    }
+  }
+
+  private extractAssetName(asset: any): string {
+    const properties = asset?.properties || {};
+    return String(
+      properties['asset:prop:name'] ??
+      properties['name'] ??
+      asset?.name ??
+      ''
+    );
+  }
+
+  private buildGeneratedAssetId(assetName: string): string {
+    const user = this.authService.getCurrentUser();
+    const userIdRaw = String(user?.connectorId || user?.username || user?.id || 'user');
+    const userId = this.slugify(userIdRaw);
+    const namePart = this.slugify(assetName);
+
+    if (!namePart) {
+      return '';
+    }
+    return `${userId}~${namePart}`;
+  }
+
+  private normalizeName(name: string): string {
+    return name.trim().replace(/\s+/g, ' ').toLowerCase();
+  }
+
+  private slugify(value: string): string {
+    const slug = value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    return slug || 'user';
   }
 }

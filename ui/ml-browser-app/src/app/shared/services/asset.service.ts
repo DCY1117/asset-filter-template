@@ -17,16 +17,26 @@ import { expandArray, Asset, EDC_CONTEXT, JSON_LD_DEFAULT_CONTEXT } from '@think
 import { AssetInput, QuerySpec } from '@think-it-labs/edc-connector-client';
 import { environment } from '../../../environments/environment';
 import { CONTEXTS } from '../utils/app.constants';
+import { ConnectorContextService } from './connector-context.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AssetService {
   private readonly http = inject(HttpClient);
+  private readonly connectorContextService = inject(ConnectorContextService);
 
-  private readonly BASE_URL = `${environment.runtime.managementApiUrl}${environment.runtime.service.asset.baseUrl}`;
-  private readonly UPLOAD_CHUNK_URL = `${environment.runtime.managementApiUrl}${environment.runtime.service.asset.uploadChunk}`;
-  private readonly FINALIZE_UPLOAD_URL = `${environment.runtime.managementApiUrl}${environment.runtime.service.asset.finalizeUpload}`;
+  private get baseUrl(): string {
+    return `${this.connectorContextService.getManagementApiUrl()}${environment.runtime.service.asset.baseUrl}`;
+  }
+
+  private get uploadChunkUrl(): string {
+    return `${this.connectorContextService.getManagementApiUrl()}${environment.runtime.service.asset.uploadChunk}`;
+  }
+
+  private get finalizeUploadUrl(): string {
+    return `${this.connectorContextService.getManagementApiUrl()}${environment.runtime.service.asset.finalizeUpload}`;
+  }
 
   /**
    * Helper method to transform frontend properties to EDC backend format
@@ -150,7 +160,8 @@ export class AssetService {
     // Add Daimo-style metadata to properties
     const daimoProperties = this.buildDaimoProperties(assetEntryDto.properties);
     
-    // Build EDC-compatible payload
+    // Build payload in the same shape as the working /v3/assets curl examples:
+    // { "@context": ..., "@id": "...", "properties": {...}, "dataAddress": {...} }
     const body = {
       "@context": {
         "@vocab": EDC_CONTEXT,
@@ -158,13 +169,10 @@ export class AssetService {
         "dcat": CONTEXTS.dcat,
         "daimo": "https://pionera.ai/edc/daimo#"
       },
-      "asset": {
-        "@type": "Asset",
-        "@id": assetEntryDto['@id'],
-        "properties": {
-          ...edcProperties,
-          ...daimoProperties
-        }
+      "@id": assetEntryDto['@id'],
+      "properties": {
+        ...edcProperties,
+        ...daimoProperties
       },
       "dataAddress": assetEntryDto.dataAddress
     }
@@ -175,7 +183,7 @@ export class AssetService {
     }
 
     return from(lastValueFrom(this.http.post<Asset>(
-      `${this.BASE_URL}`, body
+      `${this.baseUrl}`, body
     )));
   }
 
@@ -189,7 +197,7 @@ export class AssetService {
     }
 
     return from(lastValueFrom(this.http.get<Asset>(
-      `${this.BASE_URL}${environment.runtime.service.asset.get}${id}`
+      `${this.baseUrl}${environment.runtime.service.asset.get}${id}`
     )));
   }
 
@@ -203,7 +211,7 @@ export class AssetService {
     }
 
     return from(lastValueFrom(this.http.delete<Asset>(
-      `${this.BASE_URL}${environment.runtime.service.asset.get}${id}`
+      `${this.baseUrl}${environment.runtime.service.asset.get}${id}`
     )));
   }
 
@@ -222,7 +230,7 @@ export class AssetService {
     }
 
     return from(lastValueFrom(this.http.post<Asset[]>(
-      `${this.BASE_URL}${environment.runtime.service.asset.getAll}`, body
+      `${this.baseUrl}${environment.runtime.service.asset.getAll}`, body
     )).then(results => {
       return expandArray(results, () => new Asset());
     }));
@@ -242,7 +250,7 @@ export class AssetService {
     };
 
     return from(lastValueFrom(this.http.post<number>(
-      `${environment.runtime.managementApiUrl}${environment.runtime.service.asset.count}`, body
+      `${this.connectorContextService.getManagementApiUrl()}${environment.runtime.service.asset.count}`, body
     )));
   }
 
@@ -258,7 +266,7 @@ export class AssetService {
     };
 
     return await lastValueFrom(
-      this.http.post<{ sessionId: string; uploadId: string; s3Key: string }>(`${this.UPLOAD_CHUNK_URL.replace('/upload-chunk', '/init-upload')}`, body)
+      this.http.post<{ sessionId: string; uploadId: string; s3Key: string }>(`${this.uploadChunkUrl.replace('/upload-chunk', '/init-upload')}`, body)
     );
   }
 
@@ -279,7 +287,7 @@ export class AssetService {
     };
 
     return await lastValueFrom(
-      this.http.post<{ etag: string }>(`${this.UPLOAD_CHUNK_URL}`, body)
+      this.http.post<{ etag: string }>(`${this.uploadChunkUrl}`, body)
     );
   }
 
@@ -293,7 +301,7 @@ export class AssetService {
     };
 
     return await lastValueFrom(
-      this.http.post<{ success: boolean; s3Key: string; assetId: string }>(`${this.FINALIZE_UPLOAD_URL}`, body)
+      this.http.post<{ success: boolean; s3Key: string; assetId: string }>(`${this.finalizeUploadUrl}`, body)
     );
   }
 }

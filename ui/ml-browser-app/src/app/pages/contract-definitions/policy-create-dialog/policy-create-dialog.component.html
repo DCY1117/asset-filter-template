@@ -13,8 +13,24 @@
       <mat-hint>Unique identifier for this policy</mat-hint>
     </mat-form-field>
 
-    <!-- Action -->
+    <!-- Policy template -->
     <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Policy Template</mat-label>
+      <mat-select [(ngModel)]="templateType" required>
+        <mat-option *ngFor="let tpl of policyTemplates" [value]="tpl.value">
+          {{ tpl.label }}
+        </mat-option>
+      </mat-select>
+      <mat-icon matPrefix>inventory_2</mat-icon>
+      <mat-hint>
+        {{ templateType === 'open'
+          ? 'Creates an empty Set policy (same style as create-policy.json)'
+          : 'Creates an action-based policy with optional constraints' }}
+      </mat-hint>
+    </mat-form-field>
+
+    <!-- Action -->
+    <mat-form-field *ngIf="templateType === 'action'" appearance="outline" class="full-width">
       <mat-label>Action</mat-label>
       <mat-select [(ngModel)]="action" required>
         <mat-option *ngFor="let act of supportedActions" [value]="act">
@@ -26,7 +42,7 @@
     </mat-form-field>
 
     <!-- Constraints Section -->
-    <div class="constraints-section">
+    <div *ngIf="templateType === 'action'" class="constraints-section">
       <h3>Constraints (Optional)</h3>
       <p class="section-description">Add constraints to restrict policy applicability</p>
 
@@ -106,9 +122,11 @@
       <h4>Policy Preview</h4>
       <div class="preview-content">
         <p><strong>ID:</strong> {{ policyId }}</p>
-        <p><strong>Action:</strong> {{ action }}</p>
-        <p *ngIf="constraints.length === 0"><em>No constraints (unrestricted)</em></p>
-        <div *ngIf="constraints.length > 0">
+        <p><strong>Template:</strong> {{ templateType === 'open' ? 'Open Policy (Template)' : 'Action Policy' }}</p>
+        <p *ngIf="templateType === 'action'"><strong>Action:</strong> {{ action }}</p>
+        <p *ngIf="templateType === 'open'"><em>Empty permissions/prohibitions/obligations</em></p>
+        <p *ngIf="templateType === 'action' && constraints.length === 0"><em>No constraints (unrestricted)</em></p>
+        <div *ngIf="templateType === 'action' && constraints.length > 0">
           <p><strong>Constraints:</strong></p>
           <ul>
             <li *ngFor="let c of constraints">

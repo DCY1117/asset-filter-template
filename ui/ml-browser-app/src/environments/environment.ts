@@ -7,11 +7,13 @@ export const environment = {
   runtime: {
     // Provider Management API (asset/policy/contract definition)
     managementApiUrl: 'http://localhost:19193/management',
+    providerManagementUrl: 'http://localhost:19193/management',
 
     // Consumer endpoints (extensions + management)
     consumerApiUrl: 'http://localhost:29191',
     consumerManagementUrl: 'http://localhost:29193/management',
     consumerProtocolUrl: 'http://localhost:29194/protocol',
+    providerApiUrl: 'http://localhost:19191',
 
     // Provider DSP endpoint
     providerProtocolUrl: 'http://localhost:19194/protocol',

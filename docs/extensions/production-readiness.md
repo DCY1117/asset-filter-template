@@ -8,11 +8,13 @@ This project is a local development scaffold. The extensions are functional, but
 
 Current state:
 - In-memory stores for assets, policies, agreements, transfers, and EDRs
+- Contract definition sequence allocator persists to local file (`./.state/contract-sequences.json`)
 
 Production requirement:
 - Database-backed stores (Postgres or equivalent)
 - Durable transfer state and retry
 - Persistent EDR cache
+- Shared/transactional sequence source for contract IDs in multi-instance deployments
 
 ## 2) Security and identity
 
@@ -60,12 +62,14 @@ Production requirement:
 Current state:
 - No strict schema validation on inference payloads
 - Dev auth in UI
+- Slash-style technical asset IDs (`user/model`) cause path-parameter lookup issues on `/v3/assets/{id}` in this runtime
 
 Production requirement:
 - Validate inference schema
 - Consistent error codes
 - Pagination and rate limits
 - Real auth in UI
+- Adopt a path-safe technical ID format (for example `user--model`) and keep slash style as display metadata only
 
 ## 7) Deployment
 

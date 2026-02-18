@@ -59,7 +59,9 @@ Notes:
 1. Parses request JSON
 2. Resolves an EDR:
    - If `endpoint` + `authorization` are provided, uses them
-   - Else, if `assetId` is provided, it looks up a matching contract agreement and starts a transfer
+   - Else, if `assetId` is provided:
+     - if asset is local on the active connector, it executes directly against local data address
+     - if asset is external, it looks up a matching contract agreement and starts a transfer
    - Else, if `contractId` is provided, it starts a transfer directly
    - Else, if `transferProcessId` is provided, it waits for the EDR
 3. Sends a request to the provider proxy endpoint with method + headers + payload
@@ -116,12 +118,12 @@ Non-endpoint asset:
 
 Start server:
 ```bash
-python3 /home/yayu/Projects/PIONERA/asset-filter-template/tools/mock-inference-server.py
+python3 ./tools/mock-inference-server.py
 ```
 
 Create asset:
 ```bash
-curl -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/create-asset-infer-mock.json \
+curl -d @./resources/requests/create-asset-infer-mock.json \
   -H 'content-type: application/json' \
   http://localhost:19193/management/v3/assets -s | jq
 ```
@@ -130,7 +132,7 @@ Call inference:
 ```bash
 curl -X POST "http://localhost:29191/api/infer" \
   -H "Content-Type: application/json" \
-  -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/infer-example.json -s | jq
+  -d @./resources/requests/infer-example.json -s | jq
 ```
 
 Expected output:

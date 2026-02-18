@@ -29,6 +29,8 @@ export interface MLAsset {
   // Contract information
   hasContractOffers?: boolean;
   contractOffers?: unknown[];
+  hasAgreement?: boolean;
+  negotiationInProgress?: boolean;
   endpointUrl?: string;
   participantId?: string;
   

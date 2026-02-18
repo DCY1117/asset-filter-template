@@ -8,7 +8,7 @@ This section documents the catalog list view.
 `/catalog`
 
 ## Purpose
-- Show datasets with contract offers from the consumer perspective.
+- Show datasets with contract offers from the active connector perspective.
 
 ## Components and Files
 - `ui/ml-browser-app/src/app/pages/catalog/catalog.component.ts`
@@ -16,13 +16,14 @@ This section documents the catalog list view.
 - `ui/ml-browser-app/src/app/shared/services/catalog-state.service.ts`
 
 ## API Calls
-- `POST {consumerManagementUrl}/v3/catalog/request`
-- `POST {consumerManagementUrl}/v3/catalog/request/count`
+- `POST {activeManagementUrl}/v3/catalog/request`
+- `POST {activeManagementUrl}/v3/catalog/request/count`
 
 ## Functionality
 - Loads catalog items with `querySpec` pagination.
 - Displays contract count and basic properties.
 - Opens the catalog detail view with selected item state.
+- Counterparty address is selected by role (`consumer -> provider DSP`, `provider -> consumer DSP`).
 
 ## Status
 Working if the count endpoint accepts the request format.

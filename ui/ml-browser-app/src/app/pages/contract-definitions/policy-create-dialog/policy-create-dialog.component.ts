@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -51,6 +51,7 @@ export class PolicyCreateDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<PolicyCreateDialogComponent>);
 
   policyId = '';
+  templateType: 'open' | 'action' = 'open';
   action = 'USE';
   
   // Constraint fields
@@ -64,6 +65,10 @@ export class PolicyCreateDialogComponent {
 
   // Supported values
   supportedActions = ['USE', 'TRANSFER', 'DELETE'];
+  readonly policyTemplates = [
+    { value: 'open', label: 'Open Policy (Template)', hint: 'Matches create-policy.json with empty permission/prohibition/obligation' },
+    { value: 'action', label: 'Action Policy', hint: 'Adds one permission with optional constraints' }
+  ] as const;
   
   supportedLeftOperands = [
     { value: 'BusinessPartnerNumber', label: 'Business Partner Number', hint: 'Partner identification number' },
@@ -139,26 +144,26 @@ export class PolicyCreateDialogComponent {
       return;
     }
 
-    // Build ODRL policy structure
+    // Build ODRL policy structure aligned with EDC templates.
     const policyDefinition: any = {
       '@id': this.policyId,
       policy: {
-        '@context': [
-          'https://www.w3.org/ns/odrl.jsonld',
-          { 'edc': 'https://w3id.org/edc/v0.0.1/ns/' }
-        ],
-        '@type': 'PolicyDefinition',
-        '@id': this.policyId,
-        'odrl:permission': [{
-          'odrl:action': this.action,
-          ...(this.constraints.length > 0 && {
-            'odrl:constraint': this.constraints.map(c => ({
-              'odrl:leftOperand': c.leftOperand,
-              'odrl:operator': c.operator,
-              'odrl:rightOperand': c.rightOperand
-            }))
-          })
-        }]
+        '@context': 'http://www.w3.org/ns/odrl.jsonld',
+        '@type': 'Set',
+        permission: this.templateType === 'open'
+          ? []
+          : [{
+              action: this.action,
+              ...(this.constraints.length > 0 && {
+                constraint: this.constraints.map(c => ({
+                  leftOperand: c.leftOperand,
+                  operator: c.operator,
+                  rightOperand: c.rightOperand
+                }))
+              })
+            }],
+        prohibition: [],
+        obligation: []
       }
     };
 
@@ -167,7 +172,7 @@ export class PolicyCreateDialogComponent {
     this.policyService.createPolicy(policyDefinition).subscribe({
       next: (result) => {
         this.notificationService.showInfo('Policy created successfully');
-        this.dialogRef.close(policyDefinition.policy);
+        this.dialogRef.close({ '@id': this.policyId });
       },
       error: (error) => {
         console.error('[Policy Create Dialog] Error creating policy:', error);

@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 include(":connector")
 include(":provider-proxy-data-plane")
+include(":final-connector")

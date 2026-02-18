@@ -8,10 +8,11 @@
 
     <mat-card-content>
       <mat-form-field class="form-field" appearance="outline">
-        <mat-label>Contract Definition ID</mat-label>
-        <input [(ngModel)]="contractDefinition['@id']" matInput required placeholder="contract-def-001">
+        <mat-label>Contract Definition ID (Auto)</mat-label>
+        <input [value]="contractDefinition['@id']" matInput readonly>
         <mat-icon matPrefix>fingerprint</mat-icon>
-        <mat-hint>Unique identifier for this contract definition</mat-hint>
+        <mat-hint *ngIf="!isAllocatingId">This exact ID will be used when creating the contract</mat-hint>
+        <mat-hint *ngIf="isAllocatingId">Creating contract...</mat-hint>
       </mat-form-field>
 
       <div class="policy-section">
@@ -82,8 +83,8 @@
               [matAutocomplete]="auto">
           </mat-chip-listbox>
 
-          <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayAsset">
-            <mat-option *ngFor="let asset of filteredAssets" [value]="asset" (onSelectionChange)="addAsset($event, asset)">
+          <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayAsset" (optionSelected)="onAssetSelected($event)">
+            <mat-option *ngFor="let asset of filteredAssets" [value]="asset">
               <div class="asset-option">
                 <span class="asset-name">{{ asset.name || asset.id }}</span>
                 <span class="asset-id">{{ asset.id }}</span>

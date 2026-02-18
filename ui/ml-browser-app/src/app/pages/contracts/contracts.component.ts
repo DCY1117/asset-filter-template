@@ -526,7 +526,8 @@ export class ContractsComponent implements OnInit {
       next: (contracts: any[]) => {
         console.log('[Contracts] Raw response from service:', contracts);
         console.log('[Contracts] First contract:', contracts[0]);
-        this.contracts.set(contracts);
+        const normalizedContracts = (contracts || []).map((contract) => this.normalizeContract(contract));
+        this.contracts.set(normalizedContracts);
         this.loading.set(false);
       },
       error: (error: any) => {
@@ -538,10 +539,14 @@ export class ContractsComponent implements OnInit {
     });
   }
 
-  formatDate(dateString: string): string {
-    if (!dateString) return 'N/A';
+  formatDate(dateValue: string | number | null | undefined): string {
+    if (dateValue === null || dateValue === undefined || dateValue === '') return 'N/A';
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
+      const date = typeof dateValue === 'number' ? new Date(dateValue) : new Date(String(dateValue));
+      if (Number.isNaN(date.getTime())) {
+        return 'N/A';
+      }
+      return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
@@ -612,5 +617,65 @@ export class ContractsComponent implements OnInit {
 
   createContract(): void {
     this.router.navigate(['/contract-definitions/create']);
+  }
+
+  private normalizeContract(contract: any): any {
+    const accessPolicyId = contract.accessPolicyId || contract['edc:accessPolicyId'] || '';
+    const contractPolicyId = contract.contractPolicyId || contract['edc:contractPolicyId'] || '';
+    const assetIds = this.extractAssetIds(contract);
+    const createdAt = this.extractCreatedAt(contract);
+
+    return {
+      ...contract,
+      accessPolicyId,
+      contractPolicyId,
+      assetIds,
+      _metadata: {
+        ...(contract._metadata || {}),
+        createdAt
+      }
+    };
+  }
+
+  private extractAssetIds(contract: any): string[] {
+    const rawSelectors = contract.assetsSelector || contract['edc:assetsSelector'] || [];
+    const selectors = Array.isArray(rawSelectors) ? rawSelectors : [rawSelectors];
+
+    const ids: string[] = [];
+    const pushId = (value: unknown) => {
+      const scalar = this.extractScalarValue(value);
+      if (typeof scalar === 'string' && scalar.trim().length > 0) {
+        ids.push(scalar);
+      }
+    };
+
+    selectors.forEach((selector: any) => {
+      const rawOperandRight = selector?.operandRight ?? selector?.['edc:operandRight'];
+      if (Array.isArray(rawOperandRight)) {
+        rawOperandRight.forEach((value: unknown) => pushId(value));
+      } else {
+        pushId(rawOperandRight);
+      }
+    });
+
+    return Array.from(new Set(ids));
+  }
+
+  private extractCreatedAt(contract: any): string | number | null {
+    return (
+      contract?._metadata?.createdAt ??
+      contract?._metadata?.['edc:createdAt'] ??
+      contract?.createdAt ??
+      contract?.['edc:createdAt'] ??
+      null
+    );
+  }
+
+  private extractScalarValue(value: unknown): unknown {
+    if (value && typeof value === 'object') {
+      const obj = value as Record<string, unknown>;
+      return obj['@value'] ?? obj['@id'] ?? obj['id'] ?? value;
+    }
+    return value;
   }
 }

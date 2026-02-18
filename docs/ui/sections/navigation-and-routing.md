@@ -15,7 +15,9 @@ Primary routes:
 - `/ml-assets`
 - `/infer`
 - `/assets/create`
+- `/assets/:id` (legacy local detail route)
 - `/catalog`
+- `/catalog/view`
 - `/contracts`
 - `/contract-definitions/create`
 
@@ -28,6 +30,7 @@ Primary routes:
 - Responsive navigation drawer using Angular Material.
 - Menu items are static and not feature-flagged.
 - Auth guard redirects to `/login` when token is missing.
+- Logged-in role (`consumer` / `provider`) is stored in auth state and used by services for endpoint routing.
 
 ## Status
 Working.

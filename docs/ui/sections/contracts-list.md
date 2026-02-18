@@ -8,22 +8,25 @@ This section documents the contracts page that lists contract definitions.
 `/contracts`
 
 ## Purpose
-- Display contract definitions stored on the provider connector.
+- Display contract definitions stored on the active connector (provider or consumer).
 
 ## Components and Files
 - `ui/ml-browser-app/src/app/pages/contracts/contracts.component.ts`
 - `ui/ml-browser-app/src/app/shared/services/contract-definition.service.ts`
 
 ## API Calls
-- `POST {managementApiUrl}/v3/contractdefinitions/request`
+- `POST {activeManagementUrl}/v3/contractdefinitions/request`
 
 ## Functionality
 - Lists contract definitions with access and contract policy info.
+- Shows associated assets resolved from `assetsSelector` criteria (`operandRight` values).
+- Accepts EDC response variants where `assetsSelector` can be an array or a single object.
+- Shows created date from available metadata fields (`_metadata.createdAt`, `createdAt`, or namespaced variants).
 - “View Assets” navigates to the first asset in the definition.
 - “Create Contract” opens the contract definition form.
 
 ## Status
-Working with minor TODOs.
+Working.
 
 ## Known Gaps
 - “View Details” is a placeholder.

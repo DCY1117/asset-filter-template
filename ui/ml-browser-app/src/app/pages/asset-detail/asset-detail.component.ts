@@ -292,7 +292,8 @@ export class AssetDetailComponent implements OnInit {
   loading = true;
 
   ngOnInit(): void {
-    const assetId = this.route.snapshot.paramMap.get('id');
+    const routeId = this.route.snapshot.paramMap.get('id');
+    const assetId = routeId ? this.safeDecodeURIComponent(routeId) : null;
     console.log('[Asset Detail] ngOnInit - Asset ID from route:', assetId);
     if (assetId) {
       this.loadAsset(assetId);
@@ -358,5 +359,13 @@ export class AssetDetailComponent implements OnInit {
 
   createOffer(): void {
     this.notificationService.showInfo('Contract offer creation will be implemented in next phase');
+  }
+
+  private safeDecodeURIComponent(value: string): string {
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
   }
 }

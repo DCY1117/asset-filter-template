@@ -15,22 +15,31 @@ This section documents the catalog detail view and contract offer display.
 - `ui/ml-browser-app/src/app/shared/services/catalog-state.service.ts`
 
 ## API Calls
-None. Data is passed from the catalog browser via `CatalogStateService`.
+- `POST {activeManagementUrl}/v3/contractnegotiations` (start negotiation)
+- `GET {activeManagementUrl}/v3/contractnegotiations/{id}` (poll status)
+- `POST {activeManagementUrl}/v3/contractagreements/request` (resolve negotiated state)
+- `POST {activeManagementUrl}/v3/contractdefinitions/request` (best-effort policy-id enrichment)
 
 ## Functionality
-- Displays contract offers with policy details.
+- Displays contract offers with policy terms from the offer policy:
+  - action
+  - constraints
+  - obligations
+  - prohibitions
 - Allows switching between asset info and offer details.
+- Negotiation button is active for non-negotiated offers and shows state:
+  - `Negotiate Contract`
+  - `Negotiating...`
+  - `Negotiated`
 - Back button returns to the calling view.
 
 ## Status
-Partial.
+Working.
 
 ## Known Gaps
-- Contract negotiation action is TODO.
-- “View policy JSON” is TODO.
 - Deep linking without state redirects back to catalog.
+- Policy definition IDs are not guaranteed in catalog offer payloads (offer IDs are used for negotiation).
 
 ## Change Ideas
-- Implement negotiation using `ContractNegotiationService`.
 - Fetch catalog details by id on load when state is missing.
-- Add a JSON viewer for policies and raw asset properties.
+- Add a richer policy renderer for nested duty/prohibition structures.

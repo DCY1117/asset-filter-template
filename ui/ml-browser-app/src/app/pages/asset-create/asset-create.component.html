@@ -14,12 +14,7 @@
         <mat-tab label="Asset Information">
           <div class="asset-creation-tab">
             <div class="form-row">
-              <mat-form-field class="form-field" color="accent">
-                <mat-label>ID *</mat-label>
-                <input required [(ngModel)]="id" matInput placeholder="unique-asset-id">
-              </mat-form-field>
-              
-              <mat-form-field class="form-field" color="accent">
+              <mat-form-field class="form-field-full" color="accent">
                 <mat-label>Name *</mat-label>
                 <input required [(ngModel)]="name" matInput placeholder="My ML Model">
               </mat-form-field>
@@ -28,7 +23,11 @@
             <div class="form-row">
               <mat-form-field class="form-field" color="accent">
                 <mat-label>Content Type</mat-label>
-                <input [(ngModel)]="contenttype" matInput placeholder="application/octet-stream">
+                <mat-select [(ngModel)]="contenttype">
+                  @for (type of contentTypes; track type) {
+                    <mat-option [value]="type">{{ type }}</mat-option>
+                  }
+                </mat-select>
               </mat-form-field>
 
               <mat-form-field class="form-field" color="accent">

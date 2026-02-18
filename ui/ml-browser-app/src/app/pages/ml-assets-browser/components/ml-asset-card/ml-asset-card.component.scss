@@ -108,6 +108,25 @@ mat-card-content {
   .keyword-chips {
     margin: 4px 0;
   }
+
+  .metadata-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 0;
+    background: transparent;
+    color: rgba(0, 0, 0, 0.75);
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 600;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
 }
 
 .asset-info {

@@ -14,7 +14,7 @@ Example:
 ```bash
 curl -X POST "http://localhost:29191/api/filter/catalog?profile=daimo&task=text-classification" \
   -H 'Content-Type: application/json' \
-  -d @/home/yayu/Projects/PIONERA/asset-filter-template/resources/requests/fetch-catalog.json -s | jq
+  -d @./resources/requests/fetch-catalog.json -s | jq
 ```
 
 ## 2) Required request body

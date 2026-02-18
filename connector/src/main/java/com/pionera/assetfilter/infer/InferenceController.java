@@ -26,6 +26,7 @@ import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.TypeManager;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -156,6 +157,13 @@ public class InferenceController {
                     return null;
                 }
 
+                // Local-owner shortcut:
+                // if asset is local and has a direct HttpData baseUrl, execute directly and skip contract+transfer.
+                var localAssetEndpoint = resolveLocalAssetEndpoint(assetId);
+                if (localAssetEndpoint != null) {
+                    return new EdrInfo(localAssetEndpoint, null, null);
+                }
+
                 var agreementId = findAgreementIdForAsset(assetId);
                 if (agreementId == null) {
                     return null;
@@ -175,6 +183,52 @@ public class InferenceController {
         }
 
         return waitForEdr(transferProcessId);
+    }
+
+    private String resolveLocalAssetEndpoint(String assetId) throws Exception {
+        if (assetId == null || assetId.isBlank()) {
+            return null;
+        }
+
+        // First try direct GET by ID.
+        var dataAddressNode = resolveDataAddressByAssetGet(assetId);
+        if (dataAddressNode == null || dataAddressNode.isNull()) {
+            return null;
+        }
+
+        var dataAddressType = firstNonBlank(textValue(dataAddressNode, "type", "@type"), null);
+        var baseUrl = firstNonBlank(
+                textValue(dataAddressNode, "baseUrl", "edc:baseUrl", "endpoint", "endpointUrl"), null);
+
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return null;
+        }
+
+        if (dataAddressType != null && !dataAddressType.toLowerCase(Locale.ROOT).contains("http")) {
+            monitor.debug("Local asset is not HttpData; fallback to transfer flow for asset: " + assetId);
+            return null;
+        }
+
+        monitor.debug("Using local direct inference path for asset: " + assetId + " -> " + baseUrl);
+        return baseUrl;
+    }
+
+    private JsonNode resolveDataAddressByAssetGet(String assetId) throws Exception {
+        // Encode "/" as "%2F" so path-param lookup treats it as one ID segment.
+        var encodedAssetId = URLEncoder.encode(assetId, StandardCharsets.UTF_8);
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(managementBaseUrl + "/v3/assets/" + encodedAssetId))
+                .header(ACCEPT, MediaType.APPLICATION_JSON)
+                .GET()
+                .build();
+
+        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        if (response.statusCode() / 100 != 2) {
+            return null;
+        }
+
+        var assetNode = mapper.readTree(response.body());
+        return firstNode(assetNode, "dataAddress", "edc:dataAddress");
     }
 
     private EdrInfo startTransferAndResolve(String contractId,

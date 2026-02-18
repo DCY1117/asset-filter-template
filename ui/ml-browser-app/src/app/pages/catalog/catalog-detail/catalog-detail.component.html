@@ -110,10 +110,6 @@
               </h3>
               <div class="policy-details">
                 <div class="policy-item">
-                  <span class="policy-label">Policy ID:</span>
-                  <span class="policy-value">{{ offer.accessPolicyId }}</span>
-                </div>
-                <div class="policy-item">
                   <span class="policy-label">Action:</span>
                   <mat-chip class="action-chip">{{ getPolicyAction(offer.accessPolicy) }}</mat-chip>
                 </div>
@@ -123,6 +119,22 @@
                     <mat-chip *ngFor="let constraint of getPolicyConstraints(offer.accessPolicy)" 
                               class="constraint-chip">
                       {{ formatConstraint(constraint) }}
+                    </mat-chip>
+                  </div>
+                </div>
+                <div class="policy-item" *ngIf="getPolicyObligations(offer.accessPolicy).length > 0">
+                  <span class="policy-label">Obligations:</span>
+                  <div class="constraints-list">
+                    <mat-chip *ngFor="let obligation of getPolicyObligations(offer.accessPolicy)" class="constraint-chip">
+                      {{ obligation['odrl:action'] || obligation['@id'] || 'obligation' }}
+                    </mat-chip>
+                  </div>
+                </div>
+                <div class="policy-item" *ngIf="getPolicyProhibitions(offer.accessPolicy).length > 0">
+                  <span class="policy-label">Prohibitions:</span>
+                  <div class="constraints-list">
+                    <mat-chip *ngFor="let prohibition of getPolicyProhibitions(offer.accessPolicy)" class="constraint-chip">
+                      {{ prohibition['odrl:action'] || prohibition['@id'] || 'prohibition' }}
                     </mat-chip>
                   </div>
                 </div>
@@ -137,10 +149,6 @@
               </h3>
               <div class="policy-details">
                 <div class="policy-item">
-                  <span class="policy-label">Policy ID:</span>
-                  <span class="policy-value">{{ offer.contractPolicyId }}</span>
-                </div>
-                <div class="policy-item">
                   <span class="policy-label">Action:</span>
                   <mat-chip class="action-chip">{{ getPolicyAction(offer.contractPolicy) }}</mat-chip>
                 </div>
@@ -153,16 +161,34 @@
                     </mat-chip>
                   </div>
                 </div>
+                <div class="policy-item" *ngIf="getPolicyObligations(offer.contractPolicy).length > 0">
+                  <span class="policy-label">Obligations:</span>
+                  <div class="constraints-list">
+                    <mat-chip *ngFor="let obligation of getPolicyObligations(offer.contractPolicy)" class="constraint-chip">
+                      {{ obligation['odrl:action'] || obligation['@id'] || 'obligation' }}
+                    </mat-chip>
+                  </div>
+                </div>
+                <div class="policy-item" *ngIf="getPolicyProhibitions(offer.contractPolicy).length > 0">
+                  <span class="policy-label">Prohibitions:</span>
+                  <div class="constraints-list">
+                    <mat-chip *ngFor="let prohibition of getPolicyProhibitions(offer.contractPolicy)" class="constraint-chip">
+                      {{ prohibition['odrl:action'] || prohibition['@id'] || 'prohibition' }}
+                    </mat-chip>
+                  </div>
+                </div>
               </div>
             </div>
           </mat-card-content>
 
           <mat-card-actions align="end">
-            <button (click)="viewPolicyJson(offer)" color="accent" mat-stroked-button>
-              <mat-icon>code</mat-icon> View JSON-LD
-            </button>
-            <button (click)="negotiateContract(offer)" color="accent" mat-raised-button>
-              <mat-icon>handshake</mat-icon> Negotiate Contract
+            <button
+              (click)="negotiateContract(offer)"
+              color="accent"
+              mat-raised-button
+              [disabled]="offer.hasAgreement || offer.negotiationInProgress">
+              <mat-icon>{{ offer.hasAgreement ? 'check_circle' : (offer.negotiationInProgress ? 'hourglass_top' : 'handshake') }}</mat-icon>
+              {{ offer.hasAgreement ? 'Negotiated' : (offer.negotiationInProgress ? 'Negotiating...' : 'Negotiate Contract') }}
             </button>
           </mat-card-actions>
         </mat-card>

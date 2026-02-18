@@ -26,6 +26,7 @@ export class MlAssetCardComponent {
   @Output() downloadAsset = new EventEmitter<MLAsset>();
   @Output() createContract = new EventEmitter<MLAsset>();
   @Output() negotiate = new EventEmitter<MLAsset>();
+  metadataExpanded = false;
 
   onViewDetails(): void {
     this.viewDetails.emit(this.asset);
@@ -47,6 +48,12 @@ export class MlAssetCardComponent {
    * Contract button action: CREATE CONTRACT for local assets, NEGOTIATE for external
    */
   onContractAction(): void {
+    if (!this.isLocalAsset() && this.asset.hasAgreement) {
+      return;
+    }
+    if (!this.isLocalAsset() && this.asset.negotiationInProgress) {
+      return;
+    }
     if (this.isLocalAsset()) {
       this.onCreateContract();
     } else {
@@ -88,5 +95,56 @@ export class MlAssetCardComponent {
 
   get keywordCount(): number {
     return this.asset.keywords.length;
+  }
+
+  getContractActionIcon(): string {
+    if (this.isLocalAsset()) {
+      return 'description';
+    }
+    if (this.asset.negotiationInProgress) {
+      return 'hourglass_top';
+    }
+    if (this.asset.hasAgreement) {
+      return 'check_circle';
+    }
+    return 'handshake';
+  }
+
+  getContractActionText(): string {
+    if (this.isLocalAsset()) {
+      return 'Create Contract';
+    }
+    if (this.asset.negotiationInProgress) {
+      return 'Negotiating...';
+    }
+    if (this.asset.hasAgreement) {
+      return 'Negotiated';
+    }
+    return 'Negotiate';
+  }
+
+  get modelMetadataChips(): string[] {
+    const chips: string[] = [];
+    const add = (label: string, value?: string) => {
+      const normalized = (value || '').trim();
+      if (normalized) {
+        chips.push(`${label}: ${normalized}`);
+      }
+    };
+
+    add('Task', this.asset.tasks?.[0]);
+    add('Subtask', this.asset.subtasks?.[0]);
+    add('Algorithm', this.asset.algorithms?.[0]);
+    add('Library', this.asset.libraries?.[0]);
+    add('Framework', this.asset.frameworks?.[0]);
+    add('Format', this.asset.format);
+    add('Storage', this.asset.storageType);
+    add('Content', this.asset.contentType);
+
+    return Array.from(new Set(chips)).slice(0, 6);
+  }
+
+  toggleMetadata(): void {
+    this.metadataExpanded = !this.metadataExpanded;
   }
 }

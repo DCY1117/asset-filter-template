@@ -8,30 +8,29 @@ This section documents the asset detail page.
 `/assets/:id`
 
 ## Purpose
-- Show full metadata for a single asset.
-- Provide a quick path back to the assets list.
+- Legacy local-asset detail page.
+- Main “View Details” flow now uses `/catalog/view` for both local and external assets.
 
 ## Components and Files
 - `ui/ml-browser-app/src/app/pages/asset-detail/asset-detail.component.ts`
 - `ui/ml-browser-app/src/app/shared/services/asset.service.ts`
 
 ## API Calls
-- `GET {managementApiUrl}/v3/assets/{id}`
+- `GET {activeManagementUrl}/v3/assets/{id}`
 
 ## Functionality
-- Loads the asset from the provider management API.
+- Loads the asset from the active connector management API.
 - Renders metadata from `edc:properties` and `edc:dataAddress`.
 - Shows keywords and storage info when present.
 - “Create Offer” button is a placeholder.
 
 ## Status
-Working with a placeholder for offer creation.
+Legacy/limited.
 
 ## Known Gaps
 - No contract offer creation or negotiation from this page.
 - Daimo metadata fields are not rendered explicitly.
+- Not the primary details route for the current UI flow.
 
 ## Change Ideas
-- Show Daimo fields (pipeline tag, license, tags, metrics).
-- Add raw JSON viewer for debugging.
-- Link to contract definition creation with pre-selected asset.
+- Either remove this route or keep it only for debug access.

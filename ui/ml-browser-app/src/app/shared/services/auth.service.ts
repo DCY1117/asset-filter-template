@@ -11,6 +11,7 @@ export interface User {
   username: string;
   connectorId: string;
   displayName: string;
+  role?: 'consumer' | 'provider';
 }
 
 export interface LoginResponse {
@@ -36,18 +37,20 @@ export class AuthService {
   private readonly TOKEN_KEY = 'ml_assets_auth_token';
   private readonly USER_KEY = 'ml_assets_current_user';
   private readonly DEV_AUTH_ENABLED = !!environment.runtime?.devAuth?.enabled;
-  private readonly DEV_USERS: Array<{ username: string; password: string; connectorId: string; displayName: string }> = [
+  private readonly DEV_USERS: Array<{ username: string; password: string; connectorId: string; displayName: string; role: 'consumer' | 'provider' }> = [
     {
       username: 'user-conn-user1-demo',
       password: 'user1123',
-      connectorId: 'conn-user1-demo',
-      displayName: 'User One'
+      connectorId: 'consumer',
+      displayName: 'User One',
+      role: 'consumer'
     },
     {
       username: 'user-conn-user2-demo',
       password: 'user2123',
-      connectorId: 'conn-user2-demo',
-      displayName: 'User Two'
+      connectorId: 'provider',
+      displayName: 'User Two',
+      role: 'provider'
     }
   ];
   
@@ -81,15 +84,17 @@ export class AuthService {
           id: 1,
           username: match.username,
           connectorId: match.connectorId,
-          displayName: match.displayName
+          displayName: match.displayName,
+          role: match.role
         }
       };
 
+      const normalizedUser = this.normalizeUser(response.user);
       this.setToken(response.token);
-      this.setUser(response.user);
+      this.setUser(normalizedUser);
       this.isAuthenticatedSubject.next(true);
-      this.currentUserSubject.next(response.user);
-      return of(response);
+      this.currentUserSubject.next(normalizedUser);
+      return of({ ...response, user: normalizedUser });
     }
 
     const url = `${this.AUTH_URL}/auth/login`;
@@ -99,11 +104,12 @@ export class AuthService {
     return this.httpClient.post<LoginResponse>(url, { username, password }).pipe(
       tap(response => {
         if (response.success && response.token) {
+          const normalizedUser = this.normalizeUser(response.user);
           this.setToken(response.token);
-          this.setUser(response.user);
+          this.setUser(normalizedUser);
           this.isAuthenticatedSubject.next(true);
-          this.currentUserSubject.next(response.user);
-          console.log(`[Auth] User ${username} logged in successfully as ${response.user.connectorId}`);
+          this.currentUserSubject.next(normalizedUser);
+          console.log(`[Auth] User ${username} logged in successfully as ${normalizedUser.connectorId} (${normalizedUser.role})`);
         }
       }),
       catchError(error => {
@@ -151,8 +157,9 @@ export class AuthService {
     this.httpClient.get<{ success: boolean; user: User }>(url).subscribe({
       next: (response) => {
         if (response.success && response.user) {
-          this.setUser(response.user);
-          this.currentUserSubject.next(response.user);
+          const normalizedUser = this.normalizeUser(response.user);
+          this.setUser(normalizedUser);
+          this.currentUserSubject.next(normalizedUser);
           this.isAuthenticatedSubject.next(true);
         } else {
           this.clearAuth();
@@ -185,6 +192,14 @@ export class AuthService {
   getConnectorId(): string | null {
     const user = this.getCurrentUser();
     return user ? user.connectorId : null;
+  }
+
+  getUserRole(): 'consumer' | 'provider' {
+    const user = this.getCurrentUser();
+    if (!user) {
+      return 'consumer';
+    }
+    return this.normalizeUser(user).role || 'consumer';
   }
 
   /**
@@ -223,10 +238,23 @@ export class AuthService {
     if (!userJson) return null;
     
     try {
-      return JSON.parse(userJson);
+      return this.normalizeUser(JSON.parse(userJson));
     } catch {
       return null;
     }
+  }
+
+  private normalizeUser(user: User): User {
+    const role = user.role || this.inferRole(user);
+    return { ...user, role };
+  }
+
+  private inferRole(user: User): 'consumer' | 'provider' {
+    const roleSource = `${user.connectorId} ${user.username} ${user.displayName}`.toLowerCase();
+    if (roleSource.includes('provider')) {
+      return 'provider';
+    }
+    return 'consumer';
   }
 
   /**

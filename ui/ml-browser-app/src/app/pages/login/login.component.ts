@@ -84,7 +84,7 @@ export class LoginComponent {
   /**
    * Quick login helpers for development
    */
-  loginAsOEG(): void {
+  loginAsConsumer(): void {
     this.loginForm.patchValue({
       username: 'user-conn-user1-demo',
       password: 'user1123'
@@ -92,7 +92,7 @@ export class LoginComponent {
     this.onSubmit();
   }
 
-  loginAsEdmundo(): void {
+  loginAsProvider(): void {
     this.loginForm.patchValue({
       username: 'user-conn-user2-demo',
       password: 'user2123'

@@ -6,6 +6,8 @@ export const environment = {
   // EDC Connector endpoints - will be loaded from runtime config
   runtime: {
     managementApiUrl: '',
+    providerApiUrl: '',
+    consumerApiUrl: '',
     catalogUrl: '',
     participantId: '',
     

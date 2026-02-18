@@ -15,14 +15,18 @@ import { Observable, from, lastValueFrom } from 'rxjs';
 import { expandArray, ContractDefinition, JSON_LD_DEFAULT_CONTEXT } from '@think-it-labs/edc-connector-client';
 import { QuerySpec, ContractDefinitionInput } from '@think-it-labs/edc-connector-client';
 import { environment } from '../../../environments/environment';
+import { ConnectorContextService } from './connector-context.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ContractDefinitionService {
   private readonly http = inject(HttpClient);
+  private readonly connectorContextService = inject(ConnectorContextService);
 
-  private readonly BASE_URL = `${environment.runtime.managementApiUrl}${environment.runtime.service.contractDefinition.baseUrl}`;
+  private get baseUrl(): string {
+    return `${this.connectorContextService.getManagementApiUrl()}${environment.runtime.service.contractDefinition.baseUrl}`;
+  }
 
   /**
    * Creates a new contract definition
@@ -35,7 +39,7 @@ export class ContractDefinitionService {
     }
 
     return from(lastValueFrom(this.http.post<Record<string, unknown>>(
-      `${this.BASE_URL}`, body
+      `${this.baseUrl}`, body
     )));
   }
 
@@ -49,7 +53,7 @@ export class ContractDefinitionService {
     }
 
     return from(lastValueFrom(this.http.delete<Record<string, unknown>>(
-      `${this.BASE_URL}${environment.runtime.service.contractDefinition.get}${id}`
+      `${this.baseUrl}${environment.runtime.service.contractDefinition.get}${id}`
     )));
   }
 
@@ -63,7 +67,7 @@ export class ContractDefinitionService {
     }
 
     return from(lastValueFrom(this.http.get<Record<string, unknown>>(
-      `${this.BASE_URL}${environment.runtime.service.contractDefinition.get}${id}`
+      `${this.baseUrl}${environment.runtime.service.contractDefinition.get}${id}`
     )));
   }
 
@@ -82,8 +86,8 @@ export class ContractDefinitionService {
     }
 
     return from(lastValueFrom(this.http.post<any[]>(
-      `${this.BASE_URL}${environment.runtime.service.contractDefinition.getAll}`, body
-    )));
+      `${this.baseUrl}${environment.runtime.service.contractDefinition.getAll}`, body
+    )).then((definitions) => this.normalizeContractDefinitions(definitions)));
   }
 
   /**
@@ -100,7 +104,23 @@ export class ContractDefinitionService {
     };
 
     return from(lastValueFrom(this.http.post<number>(
-      `${environment.runtime.managementApiUrl}${environment.runtime.service.contractDefinition.count}`, body
+      `${this.connectorContextService.getManagementApiUrl()}${environment.runtime.service.contractDefinition.count}`, body
     )));
+  }
+
+  private normalizeContractDefinitions(definitions: any[] | null | undefined): any[] {
+    return (definitions || []).map((definition) => {
+      const rawSelector = definition?.assetsSelector ?? definition?.['edc:assetsSelector'];
+      const normalizedSelector = Array.isArray(rawSelector)
+        ? rawSelector
+        : rawSelector
+          ? [rawSelector]
+          : [];
+
+      return {
+        ...definition,
+        assetsSelector: normalizedSelector
+      };
+    });
   }
 }
