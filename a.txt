@@ -1,3 +1,5 @@
+python3 ./tools/simple-classifier-server.py
+
 Asset Information
 
 Name: Simple Text Classifier v1

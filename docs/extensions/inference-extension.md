@@ -27,10 +27,13 @@ http://localhost:29191/api/infer
 ## 3) Default transfer config
 
 Configured in `resources/configuration/consumer-configuration.properties`:
-- `asset.infer.connector.id=provider`
-- `asset.infer.counterparty.address=http://localhost:19194/protocol`
 - `asset.infer.protocol=dataspace-protocol-http`
 - `asset.infer.transfer.type=HttpData-PULL`
+- `asset.infer.connector.id` (optional fallback)
+- `asset.infer.counterparty.address` (optional fallback)
+
+These values are fallback defaults. The runtime now first tries to resolve `connectorId` and
+`counterPartyAddress` dynamically from the selected asset's finalized agreement/negotiation.
 
 ## 4) Request format (recommended)
 
@@ -62,6 +65,7 @@ Notes:
    - Else, if `assetId` is provided:
      - if asset is local on the active connector, it executes directly against local data address
      - if asset is external, it looks up a matching contract agreement and starts a transfer
+     - when transfer parameters are not provided in the request, it derives them from agreement + negotiation metadata
    - Else, if `contractId` is provided, it starts a transfer directly
    - Else, if `transferProcessId` is provided, it waits for the EDR
 3. Sends a request to the provider proxy endpoint with method + headers + payload

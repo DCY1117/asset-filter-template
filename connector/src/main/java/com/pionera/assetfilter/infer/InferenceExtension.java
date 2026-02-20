@@ -37,13 +37,14 @@ public class InferenceExtension implements ServiceExtension {
         var managementPort = config.getInteger("web.http.management.port", 29193);
         var managementPath = config.getString("web.http.management.path", "/management");
         var managementBaseUrl = "http://" + hostname + ":" + managementPort + managementPath;
+        var localParticipantId = config.getString("edc.participant.id", null);
 
-        var defaultConnectorId = config.getString("asset.infer.connector.id", "provider");
-        var defaultCounterPartyAddress = config.getString("asset.infer.counterparty.address", "http://localhost:19194/protocol");
+        var defaultConnectorId = config.getString("asset.infer.connector.id", null);
+        var defaultCounterPartyAddress = config.getString("asset.infer.counterparty.address", null);
         var defaultProtocol = config.getString("asset.infer.protocol", "dataspace-protocol-http");
         var defaultTransferType = config.getString("asset.infer.transfer.type", "HttpData-PULL");
 
-        var controller = new InferenceController(typeManager, managementBaseUrl, defaultConnectorId,
+        var controller = new InferenceController(typeManager, managementBaseUrl, localParticipantId, defaultConnectorId,
                 defaultCounterPartyAddress, defaultProtocol, defaultTransferType, monitor);
         webService.registerResource(controller);
     }

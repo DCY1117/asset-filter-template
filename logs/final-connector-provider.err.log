@@ -1,0 +1,46 @@
+SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+Exception in thread "main" org.eclipse.edc.spi.EdcException: org.eclipse.edc.spi.EdcException: Error starting Jetty service
+	at org.eclipse.edc.boot.system.runtime.BaseRuntime.onError(BaseRuntime.java:148)
+	at org.eclipse.edc.boot.system.runtime.BaseRuntime.boot(BaseRuntime.java:117)
+	at org.eclipse.edc.boot.system.runtime.BaseRuntime.main(BaseRuntime.java:80)
+Caused by: org.eclipse.edc.spi.EdcException: Error starting Jetty service
+	at org.eclipse.edc.web.jetty.JettyService.start(JettyService.java:94)
+	at org.eclipse.edc.web.jetty.JettyExtension.start(JettyExtension.java:87)
+	at org.eclipse.edc.boot.system.injection.lifecycle.ExtensionLifecycleManager.bootServiceExtensions(ExtensionLifecycleManager.java:73)
+	at org.eclipse.edc.boot.system.runtime.BaseRuntime.bootExtensions(BaseRuntime.java:158)
+	at org.eclipse.edc.boot.system.runtime.BaseRuntime.boot(BaseRuntime.java:102)
+	... 1 more
+Caused by: java.net.SocketException: Operation not permitted
+	at java.base/sun.nio.ch.Net.socket0(Native Method)
+	at java.base/sun.nio.ch.Net.serverSocket(Net.java:556)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.<init>(ServerSocketChannelImpl.java:135)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.<init>(ServerSocketChannelImpl.java:116)
+	at java.base/sun.nio.ch.SelectorProviderImpl.openServerSocketChannel(SelectorProviderImpl.java:72)
+	at java.base/java.nio.channels.ServerSocketChannel.open(ServerSocketChannel.java:145)
+	at org.eclipse.jetty.server.ServerConnector.openAcceptChannel(ServerConnector.java:339)
+	at org.eclipse.jetty.server.ServerConnector.open(ServerConnector.java:313)
+	at org.eclipse.jetty.server.Server.lambda$doStart$0(Server.java:571)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+	at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at org.eclipse.jetty.server.Server.doStart(Server.java:567)
+	at org.eclipse.jetty.util.component.AbstractLifeCycle.start(AbstractLifeCycle.java:93)
+	at org.eclipse.edc.web.jetty.JettyService.start(JettyService.java:91)
+	... 5 more
+	Suppressed: java.net.SocketException: Operation not permitted
+		... 27 more
+	Suppressed: java.net.SocketException: Operation not permitted
+		... 27 more
+	Suppressed: java.net.SocketException: Operation not permitted
+		... 27 more
+	Suppressed: java.net.SocketException: Operation not permitted
+		... 27 more

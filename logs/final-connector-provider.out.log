@@ -1,0 +1,49 @@
+[0;32mINFO 2026-02-19T15:27:37.579897218 Booting EDC runtime[0m
+[0;32mINFO 2026-02-19T15:27:37.916455075 HTTPS enforcement it not enabled, please enable it in a production environment[0m
+[0;33mWARNING 2026-02-19T15:27:38.110364535 Config value: no setting found for 'edc.hostname', falling back to default value 'localhost'[0m
+[0;33mWARNING 2026-02-19T15:27:38.24028044 Using the InMemoryVault is not suitable for production scenarios and should be replaced with an actual Vault![0m
+[0;32mINFO 2026-02-19T15:27:38.5038851 Loaded contract sequence counters from ./.state/contract-sequences.json[0m
+[0;32mINFO 2026-02-19T15:27:38.505235345 Contract sequence endpoint ready at /api/contract-sequences/next (storage: ./.state/contract-sequences.json)[0m
+[0;33mWARNING 2026-02-19T15:27:38.539542887 No TransactionContext registered, a no-op implementation will be used, not suitable for production environments[0m
+[0;33mWARNING 2026-02-19T15:27:38.708942094 No TokenDecorator was registered. The 'scope' field of outgoing protocol messages will be empty[0m
+[0;31mSEVERE 2026-02-19T15:27:38.820568378 Error booting runtime: Error starting Jetty service[0m
+[0;31morg.eclipse.edc.spi.EdcException: Error starting Jetty service
+	at org.eclipse.edc.web.jetty.JettyService.start(JettyService.java:94)
+	at org.eclipse.edc.web.jetty.JettyExtension.start(JettyExtension.java:87)
+	at org.eclipse.edc.boot.system.injection.lifecycle.ExtensionLifecycleManager.bootServiceExtensions(ExtensionLifecycleManager.java:73)
+	at org.eclipse.edc.boot.system.runtime.BaseRuntime.bootExtensions(BaseRuntime.java:158)
+	at org.eclipse.edc.boot.system.runtime.BaseRuntime.boot(BaseRuntime.java:102)
+	at org.eclipse.edc.boot.system.runtime.BaseRuntime.main(BaseRuntime.java:80)
+Caused by: java.net.SocketException: Operation not permitted
+	at java.base/sun.nio.ch.Net.socket0(Native Method)
+	at java.base/sun.nio.ch.Net.serverSocket(Net.java:556)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.<init>(ServerSocketChannelImpl.java:135)
+	at java.base/sun.nio.ch.ServerSocketChannelImpl.<init>(ServerSocketChannelImpl.java:116)
+	at java.base/sun.nio.ch.SelectorProviderImpl.openServerSocketChannel(SelectorProviderImpl.java:72)
+	at java.base/java.nio.channels.ServerSocketChannel.open(ServerSocketChannel.java:145)
+	at org.eclipse.jetty.server.ServerConnector.openAcceptChannel(ServerConnector.java:339)
+	at org.eclipse.jetty.server.ServerConnector.open(ServerConnector.java:313)
+	at org.eclipse.jetty.server.Server.lambda$doStart$0(Server.java:571)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+	at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:179)
+	at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:1024)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+	at java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+	at java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+	at org.eclipse.jetty.server.Server.doStart(Server.java:567)
+	at org.eclipse.jetty.util.component.AbstractLifeCycle.start(AbstractLifeCycle.java:93)
+	at org.eclipse.edc.web.jetty.JettyService.start(JettyService.java:91)
+	... 5 more
+	Suppressed: java.net.SocketException: Operation not permitted
+		... 27 more
+	Suppressed: java.net.SocketException: Operation not permitted
+		... 27 more
+	Suppressed: java.net.SocketException: Operation not permitted
+		... 27 more
+	Suppressed: java.net.SocketException: Operation not permitted
+		... 27 more
+[0m

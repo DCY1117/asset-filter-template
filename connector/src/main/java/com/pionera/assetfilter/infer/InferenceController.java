@@ -46,6 +46,7 @@ public class InferenceController {
 
     private final ObjectMapper mapper;
     private final String managementBaseUrl;
+    private final String localParticipantId;
     private final String defaultConnectorId;
     private final String defaultCounterPartyAddress;
     private final String defaultProtocol;
@@ -55,6 +56,7 @@ public class InferenceController {
 
     public InferenceController(TypeManager typeManager,
                                String managementBaseUrl,
+                               String localParticipantId,
                                String defaultConnectorId,
                                String defaultCounterPartyAddress,
                                String defaultProtocol,
@@ -62,6 +64,7 @@ public class InferenceController {
                                Monitor monitor) {
         this.mapper = typeManager.getMapper();
         this.managementBaseUrl = managementBaseUrl;
+        this.localParticipantId = localParticipantId;
         this.defaultConnectorId = defaultConnectorId;
         this.defaultCounterPartyAddress = defaultCounterPartyAddress;
         this.defaultProtocol = defaultProtocol;
@@ -236,12 +239,17 @@ public class InferenceController {
                                             String counterPartyAddress,
                                             String protocol,
                                             String transferType) throws Exception {
-        var resolvedConnectorId = firstNonBlank(connectorId, defaultConnectorId);
-        var resolvedCounterPartyAddress = firstNonBlank(counterPartyAddress, defaultCounterPartyAddress);
-        var resolvedProtocol = firstNonBlank(protocol, defaultProtocol);
-        var resolvedTransferType = firstNonBlank(transferType, defaultTransferType);
+        var transferParams = resolveTransferParams(contractId, connectorId, counterPartyAddress, protocol, transferType);
+        var resolvedConnectorId = transferParams.connectorId();
+        var resolvedCounterPartyAddress = transferParams.counterPartyAddress();
+        var resolvedProtocol = transferParams.protocol();
+        var resolvedTransferType = transferParams.transferType();
 
-        if (resolvedCounterPartyAddress == null || resolvedCounterPartyAddress.isBlank()) {
+        if (resolvedCounterPartyAddress == null || resolvedCounterPartyAddress.isBlank()
+                || resolvedConnectorId == null || resolvedConnectorId.isBlank()
+                || resolvedProtocol == null || resolvedProtocol.isBlank()) {
+            monitor.warning("Inference transfer routing is incomplete. connectorId=" + resolvedConnectorId
+                    + ", counterPartyAddress=" + resolvedCounterPartyAddress + ", protocol=" + resolvedProtocol);
             return null;
         }
 
@@ -252,6 +260,59 @@ public class InferenceController {
         }
 
         return waitForEdr(createdTransferId);
+    }
+
+    private TransferParams resolveTransferParams(String contractId,
+                                                 String connectorId,
+                                                 String counterPartyAddress,
+                                                 String protocol,
+                                                 String transferType) throws Exception {
+        var resolvedConnectorId = firstNonBlank(connectorId, null);
+        var resolvedCounterPartyAddress = firstNonBlank(counterPartyAddress, null);
+        var resolvedProtocol = firstNonBlank(protocol, null);
+        var resolvedTransferType = firstNonBlank(transferType, defaultTransferType);
+
+        JsonNode agreement = null;
+        if (contractId != null && (!hasText(resolvedConnectorId) || !hasText(resolvedCounterPartyAddress))) {
+            agreement = findAgreementById(contractId);
+        }
+
+        if (!hasText(resolvedConnectorId) && agreement != null) {
+            resolvedConnectorId = inferRemoteParticipantId(agreement);
+        }
+
+        if ((!hasText(resolvedCounterPartyAddress) || !hasText(resolvedProtocol) || !hasText(resolvedConnectorId))
+                && contractId != null) {
+            var negotiation = findNegotiationByAgreementId(contractId);
+            if (negotiation != null) {
+                if (!hasText(resolvedCounterPartyAddress)) {
+                    resolvedCounterPartyAddress = firstNonBlank(
+                            textValue(negotiation, "counterPartyAddress", "protocolAddress",
+                                    "edc:counterPartyAddress", "edc:protocolAddress"), null);
+                }
+                if (!hasText(resolvedProtocol)) {
+                    resolvedProtocol = firstNonBlank(
+                            textValue(negotiation, "protocol", "edc:protocol"), null);
+                }
+                if (!hasText(resolvedConnectorId)) {
+                    resolvedConnectorId = firstNonBlank(
+                            textValue(negotiation, "counterPartyId", "connectorId",
+                                    "edc:counterPartyId", "edc:connectorId"), null);
+                }
+            }
+        }
+
+        if (!hasText(resolvedConnectorId)) {
+            resolvedConnectorId = defaultConnectorId;
+        }
+        if (!hasText(resolvedCounterPartyAddress)) {
+            resolvedCounterPartyAddress = defaultCounterPartyAddress;
+        }
+        if (!hasText(resolvedProtocol)) {
+            resolvedProtocol = defaultProtocol;
+        }
+
+        return new TransferParams(resolvedConnectorId, resolvedCounterPartyAddress, resolvedProtocol, resolvedTransferType);
     }
 
     private EdrInfo waitForEdr(String transferProcessId) throws Exception {
@@ -324,29 +385,7 @@ public class InferenceController {
     }
 
     private String findAgreementIdForAsset(String assetId) throws Exception {
-        var requestBody = mapper.createObjectNode();
-        var contextNode = mapper.createObjectNode();
-        contextNode.put("@vocab", "https://w3id.org/edc/v0.0.1/ns/");
-        requestBody.set("@context", contextNode);
-        var querySpec = mapper.createObjectNode();
-        querySpec.put("limit", 50);
-        querySpec.set("filterExpression", mapper.createArrayNode());
-        requestBody.set("querySpec", querySpec);
-
-        var request = HttpRequest.newBuilder()
-                .uri(URI.create(managementBaseUrl + "/v3/contractagreements/request"))
-                .header(CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody)))
-                .build();
-
-        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-        if (response.statusCode() / 100 != 2) {
-            monitor.warning("Contract agreement query failed: " + response.body());
-            return null;
-        }
-
-        var body = mapper.readTree(response.body());
-        var agreements = extractAgreements(body);
+        var agreements = listContractAgreements();
         if (agreements.isEmpty()) {
             return null;
         }
@@ -376,6 +415,108 @@ public class InferenceController {
         }
 
         return bestId;
+    }
+
+    private JsonNode findAgreementById(String agreementId) throws Exception {
+        if (!hasText(agreementId)) {
+            return null;
+        }
+
+        for (var agreement : listContractAgreements()) {
+            var id = firstNonBlank(
+                    textValue(agreement, "@id", "id", "agreementId", "contractAgreementId"), null);
+            if (hasText(id) && agreementId.equals(id)) {
+                return agreement;
+            }
+        }
+        return null;
+    }
+
+    private List<JsonNode> listContractAgreements() throws Exception {
+        var requestBody = mapper.createObjectNode();
+        var contextNode = mapper.createObjectNode();
+        contextNode.put("@vocab", "https://w3id.org/edc/v0.0.1/ns/");
+        requestBody.set("@context", contextNode);
+        var querySpec = mapper.createObjectNode();
+        querySpec.put("limit", 50);
+        querySpec.set("filterExpression", mapper.createArrayNode());
+        requestBody.set("querySpec", querySpec);
+
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(managementBaseUrl + "/v3/contractagreements/request"))
+                .header(CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody)))
+                .build();
+
+        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        if (response.statusCode() / 100 != 2) {
+            monitor.warning("Contract agreement query failed: " + response.body());
+            return List.of();
+        }
+
+        var body = mapper.readTree(response.body());
+        return extractAgreements(body);
+    }
+
+    private JsonNode findNegotiationByAgreementId(String agreementId) throws Exception {
+        if (!hasText(agreementId)) {
+            return null;
+        }
+
+        var requestBody = mapper.createObjectNode();
+        var contextNode = mapper.createObjectNode();
+        contextNode.put("@vocab", "https://w3id.org/edc/v0.0.1/ns/");
+        requestBody.set("@context", contextNode);
+        var querySpec = mapper.createObjectNode();
+        querySpec.put("limit", 100);
+        querySpec.set("filterExpression", mapper.createArrayNode());
+        requestBody.set("querySpec", querySpec);
+
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(managementBaseUrl + "/v3/contractnegotiations/request"))
+                .header(CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody)))
+                .build();
+
+        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        if (response.statusCode() / 100 != 2) {
+            monitor.debug("Contract negotiation query failed: " + response.body());
+            return null;
+        }
+
+        var body = mapper.readTree(response.body());
+        var negotiations = extractAgreements(body);
+        if (negotiations.isEmpty()) {
+            return null;
+        }
+
+        JsonNode best = null;
+        long bestTimestamp = Long.MIN_VALUE;
+
+        for (JsonNode negotiation : negotiations) {
+            var linkedAgreementId = firstNonBlank(
+                    textValue(negotiation, "contractAgreementId", "agreementId", "edc:contractAgreementId",
+                            "edc:agreementId"), null);
+            if (linkedAgreementId == null || !linkedAgreementId.equals(agreementId)) {
+                continue;
+            }
+
+            var state = firstNonBlank(
+                    textValue(negotiation, "state", "edc:state", "negotiationState", "edc:negotiationState"), "");
+            if (!"FINALIZED".equalsIgnoreCase(state)) {
+                continue;
+            }
+
+            var timestamp = extractTimestamp(negotiation);
+            if (timestamp > bestTimestamp) {
+                bestTimestamp = timestamp;
+                best = negotiation;
+            } else if (best == null && timestamp == Long.MIN_VALUE) {
+                best = negotiation;
+            }
+        }
+
+        return best;
     }
 
     private List<JsonNode> extractAgreements(JsonNode body) {
@@ -516,6 +657,34 @@ public class InferenceController {
         return trimmedBase + normalizedPath;
     }
 
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private String inferRemoteParticipantId(JsonNode agreement) {
+        if (agreement == null || agreement.isNull()) {
+            return null;
+        }
+
+        var providerId = firstNonBlank(textValue(agreement, "providerId", "edc:providerId"), null);
+        var consumerId = firstNonBlank(textValue(agreement, "consumerId", "edc:consumerId"), null);
+
+        if (!hasText(localParticipantId)) {
+            return firstNonBlank(providerId, consumerId, null);
+        }
+        if (localParticipantId.equals(providerId)) {
+            return consumerId;
+        }
+        if (localParticipantId.equals(consumerId)) {
+            return providerId;
+        }
+        return firstNonBlank(providerId, consumerId, null);
+    }
+
     private record EdrInfo(String endpoint, String authorization, String authHeader) {
+    }
+
+    private record TransferParams(String connectorId, String counterPartyAddress, String protocol,
+                                  String transferType) {
     }
 }

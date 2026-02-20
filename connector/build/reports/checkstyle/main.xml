@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <checkstyle version="12.3.0">
 <file name="/home/yayu/Yayu/Projects/asset-filter-template/connector/src/main/java/com/pionera/assetfilter/infer/InferenceController.java">
+<error line="249" column="17" severity="error" message="&apos;||&apos; should be on the previous line." source="com.puppycrawl.tools.checkstyle.checks.whitespace.OperatorWrapCheck"/>
+<error line="250" column="17" severity="error" message="&apos;||&apos; should be on the previous line." source="com.puppycrawl.tools.checkstyle.checks.whitespace.OperatorWrapCheck"/>
+<error line="252" column="21" severity="error" message="&apos;+&apos; should be on the previous line." source="com.puppycrawl.tools.checkstyle.checks.whitespace.OperatorWrapCheck"/>
+<error line="285" column="17" severity="error" message="&apos;&amp;&amp;&apos; should be on the previous line." source="com.puppycrawl.tools.checkstyle.checks.whitespace.OperatorWrapCheck"/>
 </file>
 <file name="/home/yayu/Yayu/Projects/asset-filter-template/connector/src/main/java/com/pionera/assetfilter/infer/InferenceExtension.java">
 </file>
