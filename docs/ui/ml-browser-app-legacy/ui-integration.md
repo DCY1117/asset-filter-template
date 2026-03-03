@@ -1,5 +1,8 @@
 # UI Integration (ML Browser)
 
+> Legacy note: this document describes the previous `ml-browser-app` UI.  
+> Current GUI docs are under `docs/ui/data-dashboard/`.
+
 This document explains how the UI connects to the extensions and how to troubleshoot common issues (auth, CORS, empty catalog).
 
 ---
@@ -67,6 +70,16 @@ The UI does not ask for transfer IDs. The extension resolves EDRs internally.
 - UI polls `GET /v3/contractnegotiations/{id}` until terminal status.
 - When finalized, UI marks the asset/offer as negotiated and disables negotiate buttons.
 - UI uses offer ID (`odrl:hasPolicy.@id`, e.g. `MQ==:...`) for negotiation requests.
+- UI must submit the offer policy without injecting extra terms.
+  - Do not add or override fields like `assigner`, `target`, or `profiles` if they are not part of the received offer.
+  - Otherwise provider validation can reject the agreement with:
+    - `Policy in the contract agreement is not equal to the one in the contract offer`
+- Local patch applied in this workspace:
+  - `DataDashboard/projects/dashboard-core/catalog/src/catalog.service.ts`
+  - `getOfferMap(...)` avoids full policy reconstruction and only adds minimal fallback fields when missing:
+    - `@context` (ODRL)
+    - `assigner` (from catalog participant id)
+    - `target` (from dataset id)
 - Offer policy terms shown in UI come from the offer policy itself:
   - action
   - constraints
@@ -117,19 +130,39 @@ Symptoms:
 - UI shows `Http failure response ... 0 Unknown Error`
 - Browser console shows CORS block
 
-Fix in consumer config (`resources/configuration/consumer-configuration.properties`):
+Fix in both connector configs:
+- `resources/configuration/consumer-configuration.properties`
+- `resources/configuration/provider-configuration.properties`
 - `edc.web.rest.cors.enabled=true`
 - `edc.web.rest.cors.origins=http://localhost:4200`
 - `edc.web.rest.cors.methods=GET,POST,PUT,DELETE,OPTIONS`
-- `edc.web.rest.cors.headers=origin, content-type, accept, authorization`
+- `edc.web.rest.cors.headers=origin, content-type, accept, authorization, x-api-key`
+
+Why this matters:
+- The dashboard connector client sends an `X-Api-Key` header.
+- If `x-api-key` is missing from `edc.web.rest.cors.headers`, the browser blocks requests during CORS preflight.
 
 Important:
 - Do not list multiple origins in a single header value. Browsers reject it.
 - If you use `127.0.0.1:4200`, set that as the single allowed origin and open UI using 127.0.0.1.
 
-Restart consumer after changes.
+Restart both connectors after changes.
 
-## 6) Empty catalog in UI
+## 6) Dashboard startup error: `Cannot read properties of null (reading 'length')`
+
+Symptoms:
+- Browser console shows template error with `menuItems.length`.
+- UI can fail before connector selection is complete.
+
+Fix:
+- Use null-safe template bindings where `menuItems` is read:
+  - `((appConfig | async)?.menuItems?.length ?? 0)`
+
+Notes:
+- This is a UI template safety issue, independent from connector health.
+- `GET /config/APP_BASE_HREF.txt` 404 is optional and non-blocking if base path is `/`.
+
+## 7) Empty catalog in UI
 
 If the list is empty:
 - Provider is not running
